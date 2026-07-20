@@ -3,7 +3,9 @@ import { motion } from "motion/react"
 
 export default function NotFoundPage() {
   return (
-    <div className="flex min-h-[70svh] flex-col items-center justify-center px-4 py-16 text-center">
+    <>
+      <title>الصفحة غير موجودة — طنط</title>
+      <div className="flex min-h-[70svh] flex-col items-center justify-center px-4 py-16 text-center">
       <motion.div
         initial={{ opacity: 0, scale: 0.92 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -34,5 +36,6 @@ export default function NotFoundPage() {
         </Link>
       </motion.div>
     </div>
+    </>
   )
 }

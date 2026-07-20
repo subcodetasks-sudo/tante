@@ -38,7 +38,9 @@ export default function MenuPage() {
   }, [categoryId])
 
   return (
-    <AnimatePresence mode="wait">
+    <>
+      <title>القائمة — طنط</title>
+      <AnimatePresence mode="wait">
       {status === "loading" && categories.length === 0 ? (
         <motion.div
           key="skeleton"
@@ -162,5 +164,6 @@ export default function MenuPage() {
         </motion.div>
       )}
     </AnimatePresence>
+    </>
   )
 }

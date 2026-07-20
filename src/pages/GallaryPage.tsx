@@ -24,7 +24,9 @@ export default function GallaryPage() {
   )
 
   return (
-    <AnimatePresence mode="wait">
+    <>
+      <title>المعرض — طنط</title>
+      <AnimatePresence mode="wait">
       {status === "loading" && mediaItems.length === 0 ? (
         <motion.div
           key="skeleton"
@@ -96,5 +98,6 @@ export default function GallaryPage() {
         </motion.div>
       )}
     </AnimatePresence>
+    </>
   )
 }

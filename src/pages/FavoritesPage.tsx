@@ -111,7 +111,9 @@ export default function FavoritesPage() {
   }, [categoryId])
 
   return (
-    <AnimatePresence mode="wait">
+    <>
+      <title>المفضلة — طنط</title>
+      <AnimatePresence mode="wait">
       {status === "loading" && categories.length === 0 && favoriteItems.length === 0 ? (
         <motion.div
           key="skeleton"
@@ -251,5 +253,6 @@ export default function FavoritesPage() {
         </motion.div>
       )}
     </AnimatePresence>
+    </>
   )
 }

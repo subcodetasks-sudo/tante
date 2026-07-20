@@ -114,6 +114,7 @@ export default function LandingPage() {
 
     return (
         <>
+            <title>طنط — طعم الأصالة</title>
             {/* Hero — expands to full-bleed as it scrolls with the page */}
             <section
                 ref={heroRef}
