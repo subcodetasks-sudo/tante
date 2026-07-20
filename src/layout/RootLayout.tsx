@@ -6,7 +6,7 @@ export default function RootLayout() {
   return (
     <div className="site-shell">
       <Navbar />
-      <main className="flex-1 pt-20 md:pt-[5.5rem]">
+      <main className="flex-1 pt-[5.25rem] md:pt-[6rem]">
         <Outlet />
       </main>
       <Footer />

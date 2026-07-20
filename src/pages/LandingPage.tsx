@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from "react"
-import { Link, useLocation } from "react-router-dom"
-import { motion, AnimatePresence, useScroll, useTransform } from "motion/react"
-import { MapPin, Star } from "lucide-react"
+import { useEffect, useMemo, useRef } from "react"
+import { Link, useLocation, useNavigate } from "react-router-dom"
+import { motion, useScroll, useTransform } from "motion/react"
+import { MapPin } from "lucide-react"
 import { featuredItems, locations, testimonials } from "@/data/menu"
 import { ScrollAnimationWrapper } from "@/components/ScrollAnimationWrapper"
+import SpecularButton from "@/components/SpecularButton"
+import Carousel from "@/components/Carousel"
 
 const heroEase = [0.22, 1, 0.36, 1] as const
 
@@ -32,9 +34,20 @@ const heroTextItem = {
 
 export default function LandingPage() {
     const location = useLocation()
+    const navigate = useNavigate()
     const heroRef = useRef<HTMLElement>(null)
-    const [feedbackIndex, setFeedbackIndex] = useState(0)
-    const feedback = testimonials[feedbackIndex]
+
+    const testimonialItems = useMemo(
+        () =>
+            testimonials.map((t) => ({
+                id: Number(t.id),
+                title: t.name,
+                description: `«${t.quote}»`,
+                icon: t.name.charAt(0),
+                rating: t.rating,
+            })),
+        [],
+    )
 
     useEffect(() => {
         if (!location.hash) return
@@ -57,14 +70,23 @@ export default function LandingPage() {
     })
     const insetX = useTransform(expand, [0, 1], [8, 0])
     const insetY = useTransform(expand, [0, 1], [8, 0])
-    const borderRadius = useTransform(expand, [0, 1], [16, 0])
+    const borderRadius = useTransform(expand, [0, 1], [26, 0])
+
+    const aboutRef = useRef<HTMLElement>(null)
+    const { scrollYProgress: aboutScrollY } = useScroll({
+        target: aboutRef,
+        offset: ["start end", "end start"],
+    })
+
+    const meatY = useTransform(aboutScrollY, [0, 1], [-15, 35])
+    const molokheyaY = useTransform(aboutScrollY, [0, 1], [25, -25])
 
     return (
         <>
             {/* Hero — expands to full-bleed as it scrolls with the page */}
             <section
                 ref={heroRef}
-                className="relative -mt-20 h-[100dvh] md:-mt-[5.5rem]"
+                className="relative -mt-[5.25rem] h-[100dvh] md:-mt-[6rem]"
             >
                 <motion.div
                     style={{
@@ -125,55 +147,113 @@ export default function LandingPage() {
                                 variants={heroTextItem}
                                 className="mt-4 flex flex-wrap items-center justify-center gap-3"
                             >
-                                <Link
-                                    to="/menu"
-                                    viewTransition={true}
-                                    className="btn-gold inline-flex rounded-xl px-6 py-2.5 text-sm md:text-base"
+                                <SpecularButton
+                                    size="md"
+                                    radius={18}
+                                    tint="#e0b45c"
+                                    tintOpacity={0.92}
+                                    blur={0}
+                                    textColor="#2e472a"
+                                    lineColor="#f0c870"
+                                    baseColor="#c9a04a"
+                                    intensity={1.15}
+                                    shineSize={12}
+                                    shineFade={36}
+                                    thickness={1.2}
+                                    speed={0.35}
+                                    followMouse
+                                    proximity={250}
+                                    autoAnimate={false}
+                                    onClick={() => navigate("/menu", { viewTransition: true })}
+                                    className="font-sans text-sm md:text-base"
                                 >
                                     عرض القائمة
-                                </Link>
-                                <Link
-                                    to="/menu"
-                                    viewTransition={true}
-                                    className="btn-gold-outline inline-flex rounded-xl px-6 py-2.5 text-sm md:text-base"
+                                </SpecularButton>
+                                <SpecularButton
+                                    size="md"
+                                    radius={18}
+                                    tint="#e0b45c"
+                                    tintOpacity={0}
+                                    blur={0}
+                                    textColor="#e0b45c"
+                                    lineColor="#f8c870"
+                                    baseColor="#e0b45c"
+                                    intensity={1}
+                                    shineSize={12}
+                                    shineFade={36}
+                                    thickness={1.2}
+                                    speed={0.35}
+                                    followMouse
+                                    proximity={250}
+                                    autoAnimate={false}
+                                    onClick={() => navigate("/menu", { viewTransition: true })}
+                                    className="font-sans text-sm shadow-none md:text-base"
                                 >
                                     اطلب الآن
-                                </Link>
+                                </SpecularButton>
                             </motion.div>
                         </motion.div>
                     </motion.div>
                 </motion.div>
             </section>
 
-            <div className="mx-auto max-w-6xl overflow-x-clip px-4 pb-16 md:px-8">
+            <div className="mx-auto max-w-6xl px-4 pb-16 md:px-8">
                 {/* About Us */}
                 <section
+                    ref={aboutRef}
                     id="about"
-                    className="scroll-mt-28 grid items-center gap-10 overflow-x-clip py-16 md:grid-cols-2 md:gap-14"
+                    className="scroll-mt-28 grid items-center gap-10 py-16 md:grid-cols-2 md:gap-14"
                 >
                     <ScrollAnimationWrapper
                         type="fade-left"
-                        className="food-placeholder aspect-[16/10] overflow-hidden rounded-2xl border border-tant-gold/20 md:order-2"
+                        className="food-placeholder order-2 aspect-square overflow-hidden rounded-3xl border border-tant-gold/25 shadow-2xl sm:aspect-[4/3] md:order-2 md:aspect-[4/3] mx-auto w-full max-w-md md:max-w-none"
                     >
-                        <span className="font-display text-xl tracking-wide">بهارات وتراث</span>
+                        <img src="/about-us.jpg" alt="About Us" className="w-full h-full object-cover object-center" />
                     </ScrollAnimationWrapper>
-                    <ScrollAnimationWrapper
-                        type="fade-right"
-                        delay={0.1}
-                        className="space-y-4 text-center md:order-1 md:text-start"
-                    >
-                        <h2 className="font-display text-3xl text-tant-gold md:text-4xl">
-                            من نحن
-                        </h2>
-                        <p className="font-arabic text-2xl leading-relaxed text-tant-gold-soft md:text-3xl">
-                            «من الموقد إلى المائدة، نكرّم مذاق الأصالة»
-                        </p>
-                        <p className="text-base leading-relaxed text-tant-cream/80 md:text-lg">
-                            وُلدت تنت من وصفات العائلة وطقوس الشارع. نختار المكوّنات
-                            المحلية، ونحترم الطرق التقليدية، ونقدّم كل طبق
-                            بدفء الضيافة العربية.
-                        </p>
-                    </ScrollAnimationWrapper>
+
+                    <div className="order-1 space-y-6 text-center md:order-1 md:text-start">
+                        <ScrollAnimationWrapper type="fade-right">
+                            <motion.div
+                                style={{ y: molokheyaY }}
+                                className="pointer-events-none flex justify-start"
+                            >
+                                <img
+                                    src="/bowel-of-molokheya.png"
+                                    alt="Bowl of Molokheya"
+                                    className="h-32 w-32 rotate-6 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] sm:h-36 sm:w-36 md:h-44 md:w-44"
+                                />
+                            </motion.div>
+                        </ScrollAnimationWrapper>
+
+                        <ScrollAnimationWrapper type="fade-right" delay={0.1}>
+                            <div className="space-y-4">
+                                <h2 className="font-display text-3xl text-tant-gold md:text-4xl">
+                                    من نحن
+                                </h2>
+                                <p className="font-arabic text-2xl leading-relaxed text-tant-gold-soft md:text-3xl">
+                                    «من الموقد إلى المائدة، نكرّم مذاق الأصالة»
+                                </p>
+                                <p className="text-base leading-relaxed text-tant-cream/80 md:text-lg">
+                                    وُلدت تنت من وصفات العائلة وطقوس الشارع. نختار المكوّنات
+                                    المحلية، ونحترم الطرق التقليدية، ونقدّم كل طبق
+                                    بدفء الضيافة العربية.
+                                </p>
+                            </div>
+                        </ScrollAnimationWrapper>
+
+                        <ScrollAnimationWrapper type="fade-up" delay={0.2}>
+                            <motion.div
+                                style={{ y: meatY }}
+                                className="pointer-events-none flex justify-end"
+                            >
+                                <img
+                                    src="/bowel-of-meat.png"
+                                    alt="Bowl of Meat"
+                                    className="h-36 w-36 -rotate-6 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] sm:h-40 sm:w-40 md:h-48 md:w-48"
+                                />
+                            </motion.div>
+                        </ScrollAnimationWrapper>
+                    </div>
                 </section>
 
                 {/* Featured Menu */}
@@ -183,7 +263,7 @@ export default function LandingPage() {
                 >
                     <ScrollAnimationWrapper type="blur-fade" className="text-center">
                         <h2 className="font-display text-3xl text-tant-gold md:text-4xl">
-                            مختاراتنا
+                            الأكثر طلبا
                         </h2>
                         <p className="mt-2 text-tant-muted">
                             لمحة ممّا تشتهر به مطبخنا.
@@ -268,47 +348,17 @@ export default function LandingPage() {
                         </h2>
                     </ScrollAnimationWrapper>
 
-                    <ScrollAnimationWrapper type="zoom-in" className="mx-auto max-w-xl">
-                        <AnimatePresence mode="wait">
-                            <motion.blockquote
-                                key={feedback.id}
-                                initial={{ opacity: 0, x: -24 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 24 }}
-                                transition={{ duration: 0.35 }}
-                                className="glass-panel rounded-2xl px-8 py-10 text-center"
-                            >
-                                <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-full border border-tant-gold/40 bg-tant-green-deep font-display text-xl text-tant-gold">
-                                    {feedback.name.charAt(0)}
-                                </div>
-                                <p className="font-display text-lg leading-relaxed text-tant-cream italic md:text-xl">
-                                    «{feedback.quote}»
-                                </p>
-                                <p className="mt-4 text-sm text-tant-gold">{feedback.name}</p>
-                                <div className="mt-3 flex justify-center gap-1">
-                                    {Array.from({ length: feedback.rating }).map((_, i) => (
-                                        <Star
-                                            key={i}
-                                            className="size-4 fill-tant-gold text-tant-gold"
-                                        />
-                                    ))}
-                                </div>
-                            </motion.blockquote>
-                        </AnimatePresence>
-
-                        <div className="mt-6 flex justify-center gap-2">
-                            {testimonials.map((t, i) => (
-                                <button
-                                    key={t.id}
-                                    type="button"
-                                    aria-label={`عرض الرأي ${i + 1}`}
-                                    onClick={() => setFeedbackIndex(i)}
-                                    className={`size-2.5 rounded-full transition-colors ${i === feedbackIndex
-                                        ? "bg-tant-gold"
-                                        : "bg-tant-gold/30 hover:bg-tant-gold/50"
-                                        }`}
-                                />
-                            ))}
+                    <ScrollAnimationWrapper type="zoom-in" className="mx-auto flex justify-center">
+                        <div className="relative h-[280px] w-full max-w-xl">
+                            <Carousel
+                                items={testimonialItems}
+                                baseWidth={576}
+                                autoplay
+                                autoplayDelay={5000}
+                                pauseOnHover
+                                loop
+                                round={false}
+                            />
                         </div>
                     </ScrollAnimationWrapper>
                 </section>
