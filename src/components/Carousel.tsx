@@ -236,14 +236,16 @@ export default function Carousel({
         info: PanInfo,
     ): void => {
         const { offset, velocity } = info
-        const direction =
+        const baseDirection =
             offset.x < -DRAG_BUFFER || velocity.x < -VELOCITY_THRESHOLD
                 ? 1
                 : offset.x > DRAG_BUFFER || velocity.x > VELOCITY_THRESHOLD
                   ? -1
                   : 0
 
-        if (direction === 0) return
+        if (baseDirection === 0) return
+
+        const direction = baseDirection * -dirMultiplier
 
         setPosition((prev) => {
             const next = prev + direction

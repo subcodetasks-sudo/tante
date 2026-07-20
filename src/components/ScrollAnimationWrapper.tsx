@@ -10,10 +10,14 @@ export type AnimationType =
   | "zoom-out"
   | "blur-fade"
 
+const MD_MQ = "(min-width: 768px)"
+
 interface ScrollAnimationWrapperProps {
   children: ReactNode
   className?: string
   type?: AnimationType
+  /** Animation used from the `md` breakpoint up; below that, `type` (default fade-up) is used. */
+  typeMd?: AnimationType
   delay?: number
   duration?: number
   threshold?: number
@@ -24,6 +28,7 @@ export function ScrollAnimationWrapper({
   children,
   className = "",
   type = "fade-up",
+  typeMd,
   delay = 0,
   duration = 0.6,
   threshold = 0.15,
@@ -32,6 +37,23 @@ export function ScrollAnimationWrapper({
   const ref = useRef<HTMLDivElement>(null)
   const isInView = useInView(ref, { once, amount: threshold })
   const [hasEntered, setHasEntered] = useState(false)
+  const [isRtl, setIsRtl] = useState(false)
+  const [isMdUp, setIsMdUp] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia(MD_MQ).matches : false,
+  )
+
+  useEffect(() => {
+    setIsRtl(document.documentElement.dir === "rtl")
+  }, [])
+
+  useEffect(() => {
+    if (!typeMd) return
+    const mq = window.matchMedia(MD_MQ)
+    const update = () => setIsMdUp(mq.matches)
+    update()
+    mq.addEventListener("change", update)
+    return () => mq.removeEventListener("change", update)
+  }, [typeMd])
 
   useEffect(() => {
     if (isInView) {
@@ -40,6 +62,7 @@ export function ScrollAnimationWrapper({
   }, [isInView])
 
   const animateState = isInView ? "visible" : hasEntered ? "exit" : "hidden"
+  const activeType = typeMd && isMdUp ? typeMd : type
 
   const getVariants = () => {
     const commonTransition = {
@@ -48,7 +71,9 @@ export function ScrollAnimationWrapper({
       delay,
     }
 
-    switch (type) {
+    const xFactor = isRtl ? -1 : 1
+
+    switch (activeType) {
       case "fade-up":
         return {
           hidden: {
@@ -95,7 +120,7 @@ export function ScrollAnimationWrapper({
         return {
           hidden: {
             opacity: 0,
-            x: 50,
+            x: 50 * xFactor,
             transition: commonTransition,
           },
           visible: {
@@ -105,7 +130,7 @@ export function ScrollAnimationWrapper({
           },
           exit: {
             opacity: 0,
-            x: -50,
+            x: -50 * xFactor,
             transition: commonTransition,
           },
         }
@@ -113,7 +138,7 @@ export function ScrollAnimationWrapper({
         return {
           hidden: {
             opacity: 0,
-            x: -50,
+            x: -50 * xFactor,
             transition: commonTransition,
           },
           visible: {
@@ -123,7 +148,7 @@ export function ScrollAnimationWrapper({
           },
           exit: {
             opacity: 0,
-            x: 50,
+            x: 50 * xFactor,
             transition: commonTransition,
           },
         }

@@ -100,6 +100,46 @@ export const menuItems: MenuItem[] = [
     category: "حلويات",
     imageLabel: "بقلاوة",
   },
+  {
+    id: "baklava",
+    name: "قطع البقلاوة",
+    description: "عجينة فيلو هشة بالفستق والعسل الذهبي.",
+    price: 32,
+    category: "حلويات",
+    imageLabel: "بقلاوة",
+  },
+  {
+    id: "baklava",
+    name: "قطع البقلاوة",
+    description: "عجينة فيلو هشة بالفستق والعسل الذهبي.",
+    price: 32,
+    category: "حلويات",
+    imageLabel: "بقلاوة",
+  },
+  {
+    id: "baklava",
+    name: "قطع البقلاوة",
+    description: "عجينة فيلو هشة بالفستق والعسل الذهبي.",
+    price: 32,
+    category: "حلويات",
+    imageLabel: "بقلاوة",
+  },
+  {
+    id: "baklava",
+    name: "قطع البقلاوة",
+    description: "عجينة فيلو هشة بالفستق والعسل الذهبي.",
+    price: 32,
+    category: "حلويات",
+    imageLabel: "بقلاوة",
+  },
+  {
+    id: "baklava",
+    name: "قطع البقلاوة",
+    description: "عجينة فيلو هشة بالفستق والعسل الذهبي.",
+    price: 32,
+    category: "حلويات",
+    imageLabel: "بقلاوة",
+  },
 ]
 
 export const featuredItems = menuItems.filter((item) =>

@@ -210,6 +210,11 @@ p {
   z-index: 1;
 }
 
+/* Same specificity as the rule above so this wins; keeps footer under page chrome */
+.site-shell>footer:not(.site-header) {
+  z-index: 0;
+}
+
 .site-header {
   position: fixed;
   top: 0;
@@ -630,6 +635,41 @@ p {
   letter-spacing: 0.04em;
 }
 
+/* Menu category dropdown — fixed under the navbar on small screens */
+.menu-cats-fixed {
+  top: 4.45rem;
+  z-index: 40;
+}
+
+.menu-cats-fixed__trigger {
+  position: relative;
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
+  border-end-start-radius: 1rem;
+  border-end-end-radius: 1rem;
+  border-top-color: transparent;
+  background: hsla(114, 26%, 22%, 0.96);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+}
+
+.menu-cats-fixed__panel {
+  background: hsla(114, 26%, 22%, 0.98);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+/* Fills the gap under the navbar’s rounded bottom so the motif doesn’t show through */
+.menu-cats-fixed__trigger::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 100%;
+  height: 1.35rem;
+  border-inline: 1px solid rgba(197, 160, 89, 0.28);
+  background: hsla(114, 26%, 22%, 0.96);
+  pointer-events: none;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -643,5 +683,9 @@ p {
   html {
     @apply font-sans;
     overflow-x: clip;
+
+    &::selection {
+      @apply bg-tant-gold text-tant-green-deep;
+    }
   }
 }

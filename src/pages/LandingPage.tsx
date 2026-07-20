@@ -6,6 +6,7 @@ import { featuredItems, locations, testimonials } from "@/data/menu"
 import { ScrollAnimationWrapper } from "@/components/ScrollAnimationWrapper"
 import SpecularButton from "@/components/SpecularButton"
 import Carousel from "@/components/Carousel"
+import { MenuItemCard } from "@/components/MenuItemCard"
 
 const heroEase = [0.22, 1, 0.36, 1] as const
 
@@ -205,14 +206,14 @@ export default function LandingPage() {
                     className="scroll-mt-28 grid items-center gap-10 py-16 md:grid-cols-2 md:gap-14"
                 >
                     <ScrollAnimationWrapper
-                        type="fade-left"
+                        typeMd="fade-left"
                         className="food-placeholder order-2 aspect-square overflow-hidden rounded-3xl border border-tant-gold/25 shadow-2xl sm:aspect-[4/3] md:order-2 md:aspect-[4/3] mx-auto w-full max-w-md md:max-w-none"
                     >
                         <img src="/about-us.jpg" alt="About Us" className="w-full h-full object-cover object-center" />
                     </ScrollAnimationWrapper>
 
                     <div className="order-1 space-y-6 text-center md:order-1 md:text-start">
-                        <ScrollAnimationWrapper type="fade-right">
+                        <ScrollAnimationWrapper typeMd="fade-right">
                             <motion.div
                                 style={{ y: molokheyaY }}
                                 className="pointer-events-none flex justify-start"
@@ -225,7 +226,7 @@ export default function LandingPage() {
                             </motion.div>
                         </ScrollAnimationWrapper>
 
-                        <ScrollAnimationWrapper type="fade-right" delay={0.1}>
+                        <ScrollAnimationWrapper typeMd="fade-right" delay={0.1}>
                             <div className="space-y-4">
                                 <h2 className="font-display text-3xl text-tant-gold md:text-4xl">
                                     من نحن
@@ -241,7 +242,7 @@ export default function LandingPage() {
                             </div>
                         </ScrollAnimationWrapper>
 
-                        <ScrollAnimationWrapper type="fade-up" delay={0.2}>
+                        <ScrollAnimationWrapper delay={0.2}>
                             <motion.div
                                 style={{ y: meatY }}
                                 className="pointer-events-none flex justify-end"
@@ -277,17 +278,7 @@ export default function LandingPage() {
                                 type="fade-up"
                                 delay={index * 0.08}
                             >
-                                <article className="glass-panel overflow-hidden rounded-2xl">
-                                    <div className="food-placeholder aspect-[4/3] rounded-none border-b border-tant-gold/15">
-                                        <span className="text-sm tracking-wider">{item.imageLabel}</span>
-                                    </div>
-                                    <div className="space-y-1 p-4 text-center">
-                                        <h3 className="font-display text-lg text-tant-gold">
-                                            {item.name}
-                                        </h3>
-                                        <p className="text-sm text-tant-gold-bright">{item.price} SAR</p>
-                                    </div>
-                                </article>
+                                <MenuItemCard item={item} />
                             </ScrollAnimationWrapper>
                         ))}
                     </div>

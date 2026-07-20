@@ -42,7 +42,7 @@ export function MenuItemCard({
             onClick={onFavorite}
             aria-label={isFavorite ? "إزالة من المفضلة" : "إضافة إلى المفضلة"}
             className={cn(
-              "absolute inset-e-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/20 text-tant-cream transition-colors hover:bg-black/35",
+              "absolute inset-e-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/20 text-tant-cream transition-colors hover:bg-black/35",
               isFavorite && "bg-tant-gold/90 text-tant-green-deep hover:bg-tant-gold",
             )}
           >
