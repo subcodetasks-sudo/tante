@@ -3,6 +3,7 @@ import RootLayout from "@/layout/RootLayout"
 import LandingPage from "@/pages/LandingPage"
 import MenuPage from "@/pages/MenuPage"
 import FavoritesPage from "@/pages/FavoritesPage"
+import GallaryPage from "@/pages/GallaryPage"
 import NotFoundPage from "@/pages/NotFoundPage"
 
 export const router = createBrowserRouter([
@@ -13,6 +14,7 @@ export const router = createBrowserRouter([
       { index: true, element: <LandingPage /> },
       { path: "menu", element: <MenuPage /> },
       { path: "favorites", element: <FavoritesPage /> },
+      { path: "gallery", element: <GallaryPage /> },
       { path: "*", element: <NotFoundPage /> },
     ],
   },

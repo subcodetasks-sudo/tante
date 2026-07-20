@@ -20,6 +20,7 @@ import {
 const sectionLinks = [
   { label: "من نحن", hash: "about" },
   { label: "القائمة", to: "/menu" as const },
+  { label: "المعرض", to: "/gallery" as const },
   { label: "الفروع", hash: "locations" },
   { label: "آراء العملاء", hash: "feedback" },
 ] as const

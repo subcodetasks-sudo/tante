@@ -32,7 +32,6 @@ const aboutLinks = [
 
 const contactLinks = [
   { label: "تواصل معنا", to: "/#locations" },
-  { label: "الخصوصية", to: "/" },
   { label: "الآراء", to: "/#feedback" },
 ]
 
@@ -88,24 +87,6 @@ export function Footer() {
         </div>
 
         <div className="space-y-4">
-          <h3 className="font-display text-lg text-tant-gold">النشرة البريدية</h3>
-          <form
-            className="flex flex-col gap-2 sm:flex-row"
-            onSubmit={(e) => e.preventDefault()}
-          >
-            <input
-              type="email"
-              placeholder="أدخل بريدك الإلكتروني"
-              aria-label="البريد الإلكتروني للنشرة"
-              className="min-w-0 flex-1 rounded-lg border border-tant-gold/30 bg-tant-green-deep/60 px-3 py-2 text-sm text-tant-cream placeholder:text-tant-muted outline-none focus:border-tant-gold"
-            />
-            <button
-              type="submit"
-              className="btn-gold rounded-lg px-4 py-2 text-sm whitespace-nowrap"
-            >
-              اشترك
-            </button>
-          </form>
           <div className="flex items-center gap-4 pt-2">
             <a
               href="https://facebook.com"
