@@ -348,18 +348,16 @@ export default function LandingPage() {
                         </h2>
                     </ScrollAnimationWrapper>
 
-                    <ScrollAnimationWrapper type="zoom-in" className="mx-auto flex justify-center">
-                        <div className="relative h-[280px] w-full max-w-xl">
-                            <Carousel
-                                items={testimonialItems}
-                                baseWidth={576}
-                                autoplay
-                                autoplayDelay={5000}
-                                pauseOnHover
-                                loop
-                                round={false}
-                            />
-                        </div>
+                    <ScrollAnimationWrapper type="zoom-in" className="mx-auto w-full max-w-xl px-2">
+                        <Carousel
+                            items={testimonialItems}
+                            baseWidth={576}
+                            autoplay
+                            autoplayDelay={5000}
+                            pauseOnHover
+                            loop
+                            round={false}
+                        />
                     </ScrollAnimationWrapper>
                 </section>
             </div>

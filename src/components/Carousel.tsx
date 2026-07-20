@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { motion, useMotionValue, useTransform } from "motion/react"
 import type { PanInfo } from "motion/react"
 import type { JSX } from "react"
@@ -20,6 +20,7 @@ export interface CarouselProps {
     pauseOnHover?: boolean
     loop?: boolean
     round?: boolean
+    className?: string
 }
 
 const DRAG_BUFFER = 0
@@ -35,6 +36,7 @@ interface CarouselItemProps {
     trackItemOffset: number
     x: ReturnType<typeof useMotionValue<number>>
     transition: typeof SPRING_OPTIONS | { duration: number }
+    isRtl: boolean
 }
 
 function CarouselItem({
@@ -45,13 +47,20 @@ function CarouselItem({
     trackItemOffset,
     x,
     transition,
+    isRtl,
 }: CarouselItemProps) {
-    const range = [
-        -(index + 1) * trackItemOffset,
-        -index * trackItemOffset,
-        -(index - 1) * trackItemOffset,
-    ]
-    const outputRange = [90, 0, -90]
+    const range = isRtl
+        ? [
+              (index - 1) * trackItemOffset,
+              index * trackItemOffset,
+              (index + 1) * trackItemOffset,
+          ]
+        : [
+              -(index + 1) * trackItemOffset,
+              -index * trackItemOffset,
+              -(index - 1) * trackItemOffset,
+          ]
+    const outputRange = round ? (isRtl ? [-90, 0, 90] : [90, 0, -90]) : [0, 0, 0]
     const rotateY = useTransform(x, range, outputRange, { clamp: false })
 
     return (
@@ -60,12 +69,13 @@ function CarouselItem({
             className={`relative flex shrink-0 flex-col overflow-hidden ${
                 round
                     ? "cursor-grab items-center justify-center border-0 bg-tant-green-deep text-center active:cursor-grabbing"
-                    : "glass-panel cursor-grab items-center justify-center rounded-2xl border border-tant-gold/20 px-8 py-10 text-center active:cursor-grabbing"
+                    : "glass-panel cursor-grab items-center justify-center rounded-2xl border border-tant-gold/20 px-6 py-8 text-center active:cursor-grabbing sm:px-8 sm:py-10"
             }`}
             style={{
                 width: itemWidth,
-                height: round ? itemWidth : "100%",
-                rotateY: rotateY,
+                height: round ? itemWidth : "auto",
+                minHeight: round ? undefined : 220,
+                rotateY: round ? rotateY : 0,
                 ...(round && { borderRadius: "50%" }),
             }}
             transition={transition}
@@ -101,9 +111,28 @@ export default function Carousel({
     pauseOnHover = false,
     loop = false,
     round = false,
+    className = "",
 }: CarouselProps): JSX.Element {
     const containerPadding = 16
-    const itemWidth = baseWidth - containerPadding * 2
+    const containerRef = useRef<HTMLDivElement>(null)
+    const [containerWidth, setContainerWidth] = useState(baseWidth)
+
+    useLayoutEffect(() => {
+        const container = containerRef.current
+        if (!container) return
+
+        const updateWidth = () => {
+            setContainerWidth(container.clientWidth || baseWidth)
+        }
+
+        updateWidth()
+        const observer = new ResizeObserver(updateWidth)
+        observer.observe(container)
+        return () => observer.disconnect()
+    }, [baseWidth])
+
+    const effectiveWidth = Math.max(containerWidth, 280)
+    const itemWidth = effectiveWidth - containerPadding * 2
     const trackItemOffset = itemWidth + GAP
     const itemsForRender = useMemo(() => {
         if (!loop) return items
@@ -116,8 +145,14 @@ export default function Carousel({
     const [isHovered, setIsHovered] = useState<boolean>(false)
     const [isJumping, setIsJumping] = useState<boolean>(false)
     const [isAnimating, setIsAnimating] = useState<boolean>(false)
+    const [isRtl, setIsRtl] = useState<boolean>(false)
 
-    const containerRef = useRef<HTMLDivElement>(null)
+    useLayoutEffect(() => {
+        setIsRtl(document.documentElement.dir === "rtl")
+    }, [])
+
+    const dirMultiplier = isRtl ? 1 : -1
+
     useEffect(() => {
         if (pauseOnHover && containerRef.current) {
             const container = containerRef.current
@@ -147,8 +182,8 @@ export default function Carousel({
     useEffect(() => {
         const startingPosition = loop ? 1 : 0
         setPosition(startingPosition)
-        x.set(-startingPosition * trackItemOffset)
-    }, [items.length, loop, trackItemOffset, x])
+        x.set(dirMultiplier * startingPosition * trackItemOffset)
+    }, [items.length, loop, trackItemOffset, x, dirMultiplier])
 
     useEffect(() => {
         if (!loop && position > itemsForRender.length - 1) {
@@ -173,7 +208,7 @@ export default function Carousel({
             setIsJumping(true)
             const target = 1
             setPosition(target)
-            x.set(-target * trackItemOffset)
+            x.set(dirMultiplier * target * trackItemOffset)
             requestAnimationFrame(() => {
                 setIsJumping(false)
                 setIsAnimating(false)
@@ -185,7 +220,7 @@ export default function Carousel({
             setIsJumping(true)
             const target = items.length
             setPosition(target)
-            x.set(-target * trackItemOffset)
+            x.set(dirMultiplier * target * trackItemOffset)
             requestAnimationFrame(() => {
                 setIsJumping(false)
                 setIsAnimating(false)
@@ -220,10 +255,15 @@ export default function Carousel({
     const dragProps = loop
         ? {}
         : {
-              dragConstraints: {
-                  left: -trackItemOffset * Math.max(itemsForRender.length - 1, 0),
-                  right: 0,
-              },
+              dragConstraints: isRtl
+                  ? {
+                        left: 0,
+                        right: trackItemOffset * Math.max(itemsForRender.length - 1, 0),
+                    }
+                  : {
+                        left: -trackItemOffset * Math.max(itemsForRender.length - 1, 0),
+                        right: 0,
+                    },
           }
 
     const activeIndex =
@@ -236,27 +276,27 @@ export default function Carousel({
     return (
         <div
             ref={containerRef}
-            className={`relative overflow-hidden p-4 ${
-                round ? "rounded-full border border-tant-gold/40" : ""
-            }`}
+            className={`relative mx-auto w-full overflow-hidden p-4 ${
+                round ? "rounded-full border border-tant-gold/40" : "min-h-[260px]"
+            } ${className}`}
             style={{
-                width: `${baseWidth}px`,
+                maxWidth: `${baseWidth}px`,
                 ...(round && { height: `${baseWidth}px` }),
             }}
         >
             <motion.div
-                className="flex"
+                className="flex h-full"
                 drag={isAnimating ? false : "x"}
                 {...dragProps}
                 style={{
-                    width: itemWidth,
+                    width: "max-content",
                     gap: `${GAP}px`,
                     perspective: 1000,
                     perspectiveOrigin: `${position * trackItemOffset + itemWidth / 2}px 50%`,
                     x,
                 }}
                 onDragEnd={handleDragEnd}
-                animate={{ x: -(position * trackItemOffset) }}
+                animate={{ x: dirMultiplier * position * trackItemOffset }}
                 transition={effectiveTransition}
                 onAnimationStart={handleAnimationStart}
                 onAnimationComplete={handleAnimationComplete}
@@ -271,6 +311,7 @@ export default function Carousel({
                         trackItemOffset={trackItemOffset}
                         x={x}
                         transition={effectiveTransition}
+                        isRtl={isRtl}
                     />
                 ))}
             </motion.div>
