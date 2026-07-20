@@ -9,6 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // https://vite.dev/config/
 export default defineConfig({
+  envPrefix: ['VITE_', 'PUBLIC_'],
   plugins: [
     react(),
     babel({ presets: [reactCompilerPreset()] }),

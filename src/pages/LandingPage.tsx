@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import { motion, useScroll, useTransform } from "motion/react"
+import { AnimatePresence, motion, useScroll, useTransform } from "motion/react"
 import { MapPin } from "lucide-react"
-import { featuredItems, locations, testimonials } from "@/data/menu"
 import { ScrollAnimationWrapper } from "@/components/ScrollAnimationWrapper"
 import SpecularButton from "@/components/SpecularButton"
 import Carousel from "@/components/Carousel"
-import { MenuItemCard } from "@/components/MenuItemCard"
+import { MenuItemCard, MenuItemCardSkeleton } from "@/components/MenuItemCard"
+import { useMenuStore } from "@/store/menuStore"
+import { useSiteStore } from "@/store/siteStore"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const heroEase = [0.22, 1, 0.36, 1] as const
 
@@ -33,21 +35,49 @@ const heroTextItem = {
     },
 }
 
+function formatBranchHours(openFrom: string, openTo: string) {
+    return `يومياً ${openFrom} – ${openTo}`
+}
+
 export default function LandingPage() {
     const location = useLocation()
     const navigate = useNavigate()
     const heroRef = useRef<HTMLElement>(null)
 
+    const mostOrdered = useMenuStore((s) => s.mostOrdered)
+    const mostOrderedStatus = useMenuStore((s) => s.mostOrderedStatus)
+    const fetchMostOrdered = useMenuStore((s) => s.fetchMostOrdered)
+    const about = useSiteStore((s) => s.about)
+    const branches = useSiteStore((s) => s.branches)
+    const testimonials = useSiteStore((s) => s.testimonials)
+    const siteStatus = useSiteStore((s) => s.status)
+    const fetchSite = useSiteStore((s) => s.fetchAll)
+
+    useEffect(() => {
+        void fetchMostOrdered()
+        void fetchSite()
+    }, [fetchMostOrdered, fetchSite])
+
+    const featuredItems = useMemo(
+        () =>
+            (mostOrdered?.products ?? []).map((product) => ({
+                product,
+                categoryName: product.category?.name_ar ?? "",
+                categoryId: product.category?.id ?? product.category_id,
+            })),
+        [mostOrdered],
+    )
+
     const testimonialItems = useMemo(
         () =>
             testimonials.map((t) => ({
-                id: Number(t.id),
+                id: t.id,
                 title: t.name,
-                description: `«${t.quote}»`,
+                description: `«${t.review}»`,
                 icon: t.name.charAt(0),
                 rating: t.rating,
             })),
-        [],
+        [testimonials],
     )
 
     useEffect(() => {
@@ -209,7 +239,11 @@ export default function LandingPage() {
                         typeMd="fade-left"
                         className="food-placeholder order-2 aspect-square overflow-hidden rounded-3xl border border-tant-gold/25 shadow-2xl sm:aspect-[4/3] md:order-2 md:aspect-[4/3] mx-auto w-full max-w-md md:max-w-none"
                     >
-                        <img src="/about-us.jpg" alt="About Us" className="w-full h-full object-cover object-center" />
+                        <img
+                            src={about?.image ?? "/about-us.jpg"}
+                            alt={about?.title ?? "من نحن"}
+                            className="w-full h-full object-cover object-center"
+                        />
                     </ScrollAnimationWrapper>
 
                     <div className="order-1 space-y-6 text-center md:order-1 md:text-start">
@@ -229,15 +263,14 @@ export default function LandingPage() {
                         <ScrollAnimationWrapper typeMd="fade-right" delay={0.1}>
                             <div className="space-y-4">
                                 <h2 className="font-display text-3xl text-tant-gold md:text-4xl">
-                                    من نحن
+                                    {about?.title ?? "من نحن"}
                                 </h2>
                                 <p className="font-arabic text-2xl leading-relaxed text-tant-gold-soft md:text-3xl">
-                                    «من الموقد إلى المائدة، نكرّم مذاق الأصالة»
+                                    «{about?.description ?? "من الموقد إلى المائدة، نكرّم مذاق الأصالة"}»
                                 </p>
-                                <p className="text-base leading-relaxed text-tant-cream/80 md:text-lg">
-                                    وُلدت تنت من وصفات العائلة وطقوس الشارع. نختار المكوّنات
-                                    المحلية، ونحترم الطرق التقليدية، ونقدّم كل طبق
-                                    بدفء الضيافة العربية.
+                                <p className="whitespace-pre-line text-base leading-relaxed text-tant-cream/80 md:text-lg">
+                                    {about?.content ??
+                                        "وُلدت تنت من وصفات العائلة وطقوس الشارع. نختار المكوّنات المحلية، ونحترم الطرق التقليدية، ونقدّم كل طبق بدفء الضيافة العربية."}
                                 </p>
                             </div>
                         </ScrollAnimationWrapper>
@@ -264,24 +297,64 @@ export default function LandingPage() {
                 >
                     <ScrollAnimationWrapper type="blur-fade" className="text-center">
                         <h2 className="font-display text-3xl text-tant-gold md:text-4xl">
-                            الأكثر طلبا
+                            {mostOrdered?.title ?? "الأكثر طلباً"}
                         </h2>
                         <p className="mt-2 text-tant-muted">
-                            لمحة ممّا تشتهر به مطبخنا.
+                            {mostOrdered?.description ??
+                                "لمحة ممّا تشتهر به مطبخنا."}
                         </p>
                     </ScrollAnimationWrapper>
 
-                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                        {featuredItems.map((item, index) => (
-                            <ScrollAnimationWrapper
-                                key={item.id}
-                                type="fade-up"
-                                delay={index * 0.08}
+                    <AnimatePresence mode="wait">
+                        {mostOrderedStatus === "loading" ? (
+                            <motion.div
+                                key="skeleton"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4"
                             >
-                                <MenuItemCard item={item} />
-                            </ScrollAnimationWrapper>
-                        ))}
-                    </div>
+                                {Array.from({ length: 4 }).map((_, index) => (
+                                    <MenuItemCardSkeleton key={index} />
+                                ))}
+                            </motion.div>
+                        ) : featuredItems.length > 0 ? (
+                            <motion.div
+                                key="content"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4"
+                            >
+                                {featuredItems.map(({ product, categoryName, categoryId }, index) => (
+                                    <ScrollAnimationWrapper
+                                        key={product.id}
+                                        type="fade-up"
+                                        delay={index * 0.08}
+                                    >
+                                        <MenuItemCard
+                                            item={product}
+                                            categoryId={categoryId}
+                                            categoryName={categoryName}
+                                        />
+                                    </ScrollAnimationWrapper>
+                                ))}
+                            </motion.div>
+                        ) : (
+                            <motion.p
+                                key="empty"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="text-center text-tant-muted"
+                            >
+                                لا توجد أطباق مميزة حالياً.
+                            </motion.p>
+                        )}
+                    </AnimatePresence>
 
                     <ScrollAnimationWrapper type="zoom-in" delay={0.15} className="flex justify-center pt-2">
                         <Link
@@ -309,8 +382,8 @@ export default function LandingPage() {
                     </ScrollAnimationWrapper>
 
                     <ul className="mx-auto grid max-w-4xl gap-6 md:grid-cols-3">
-                        {locations.map((loc, index) => (
-                            <li key={loc.id}>
+                        {branches.map((branch, index) => (
+                            <li key={branch.id}>
                                 <ScrollAnimationWrapper
                                     type="fade-up"
                                     delay={index * 0.1}
@@ -319,9 +392,18 @@ export default function LandingPage() {
                                     <div className="mb-3 inline-flex size-10 items-center justify-center rounded-full border border-tant-gold/40 text-tant-gold">
                                         <MapPin className="size-5" />
                                     </div>
-                                    <h3 className="font-display text-xl text-tant-gold">{loc.city}</h3>
-                                    <p className="mt-1 text-sm text-tant-cream/80">{loc.address}</p>
-                                    <p className="mt-1 text-sm text-tant-muted">{loc.hours}</p>
+                                    <h3 className="font-display text-xl text-tant-gold">
+                                        {branch.name}
+                                    </h3>
+                                    <p className="mt-1 text-sm text-tant-cream/80">
+                                        {branch.address}
+                                    </p>
+                                    <p className="mt-1 text-sm text-tant-muted">
+                                        {formatBranchHours(
+                                            branch.open_from,
+                                            branch.open_to,
+                                        )}
+                                    </p>
                                 </ScrollAnimationWrapper>
                             </li>
                         ))}
@@ -340,15 +422,57 @@ export default function LandingPage() {
                     </ScrollAnimationWrapper>
 
                     <ScrollAnimationWrapper type="zoom-in" className="mx-auto w-full max-w-xl px-2">
-                        <Carousel
-                            items={testimonialItems}
-                            baseWidth={576}
-                            autoplay
-                            autoplayDelay={5000}
-                            pauseOnHover
-                            loop
-                            round={false}
-                        />
+                        <AnimatePresence mode="wait">
+                            {siteStatus === "loading" && testimonialItems.length === 0 ? (
+                                <motion.div
+                                    key="skeleton"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="glass-panel flex flex-col items-center justify-center rounded-2xl border border-tant-gold/20 px-6 py-8 text-center sm:px-8 sm:py-10 min-h-[220px]"
+                                >
+                                    <Skeleton className="size-16 rounded-full" />
+                                    <Skeleton className="mt-5 h-4 w-5/6 rounded-lg" />
+                                    <Skeleton className="mt-2 h-4 w-2/3 rounded-lg" />
+                                    <Skeleton className="mt-4 h-4 w-24 rounded-lg" />
+                                    <div className="mt-3 flex gap-1">
+                                        {Array.from({ length: 5 }).map((_, i) => (
+                                            <Skeleton key={i} className="size-4 rounded-full" />
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            ) : testimonialItems.length > 0 ? (
+                                <motion.div
+                                    key="content"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.3 }}
+                                >
+                                    <Carousel
+                                        items={testimonialItems}
+                                        baseWidth={576}
+                                        autoplay
+                                        autoplayDelay={5000}
+                                        pauseOnHover
+                                        loop
+                                        round={false}
+                                    />
+                                </motion.div>
+                            ) : (
+                                <motion.p
+                                    key="empty"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="text-center text-tant-muted"
+                                >
+                                    لا توجد آراء للعملاء حالياً.
+                                </motion.p>
+                            )}
+                        </AnimatePresence>
                     </ScrollAnimationWrapper>
                 </section>
             </div>

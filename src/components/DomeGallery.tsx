@@ -1,7 +1,15 @@
 import { useEffect, useMemo, useRef, useCallback, type CSSProperties } from 'react';
 import { useGesture } from '@use-gesture/react';
 
-type ImageItem = string | { src: string; alt?: string };
+type ImageItem =
+  | string
+  | {
+      src: string
+      alt?: string
+      type?: "image" | "video"
+      videoUrl?: string
+      videoKind?: "youtube" | "file"
+    }
 
 type DomeGalleryProps = {
   images?: ImageItem[];
@@ -28,6 +36,9 @@ type DomeGalleryProps = {
 type ItemDef = {
   src: string;
   alt: string;
+  type: "image" | "video";
+  videoUrl?: string;
+  videoKind?: "youtube" | "file";
   x: number;
   y: number;
   sizeX: number;
@@ -96,7 +107,7 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
 
   const totalSlots = coords.length;
   if (pool.length === 0) {
-    return coords.map(c => ({ ...c, src: '', alt: '' }));
+    return coords.map(c => ({ ...c, src: '', alt: '', type: 'image' as const }));
   }
   if (pool.length > totalSlots) {
     console.warn(
@@ -106,9 +117,15 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
 
   const normalizedImages = pool.map(image => {
     if (typeof image === 'string') {
-      return { src: image, alt: '' };
+      return { src: image, alt: '', type: 'image' as const };
     }
-    return { src: image.src || '', alt: image.alt || '' };
+    return {
+      src: image.src || '',
+      alt: image.alt || '',
+      type: image.type ?? 'image',
+      videoUrl: image.videoUrl,
+      videoKind: image.videoKind,
+    };
   });
 
   const usedImages = Array.from({ length: totalSlots }, (_, i) => normalizedImages[i % normalizedImages.length]);
@@ -129,7 +146,10 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
   return coords.map((c, i) => ({
     ...c,
     src: usedImages[i].src,
-    alt: usedImages[i].alt
+    alt: usedImages[i].alt,
+    type: usedImages[i].type,
+    videoUrl: usedImages[i].videoUrl,
+    videoKind: usedImages[i].videoKind,
   }));
 }
 
@@ -523,12 +543,28 @@ export default function DomeGallery({
         filter: ${grayscale ? 'grayscale(1)' : 'none'};
       `;
 
-      const originalImg = overlay.querySelector('img');
+      const originalImg =
+        overlay.querySelector('img.enlarge__poster') ||
+        overlay.querySelector('img');
       if (originalImg) {
         const img = originalImg.cloneNode() as HTMLImageElement;
-        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
+        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; display: block;';
         animatingOverlay.appendChild(img);
+      } else {
+        // Video without poster — solid fallback for close animation.
+        animatingOverlay.style.background = '#111';
       }
+
+      // Stop playback before removing overlay (iframe/video).
+      overlay.querySelectorAll('iframe, video').forEach(node => {
+        if (node instanceof HTMLVideoElement) {
+          node.pause();
+          node.removeAttribute('src');
+          node.load();
+        } else if (node instanceof HTMLIFrameElement) {
+          node.src = '';
+        }
+      });
 
       overlay.remove();
       rootRef.current!.appendChild(animatingOverlay);
@@ -649,11 +685,44 @@ export default function DomeGallery({
     overlay.style.cssText = `position:absolute; left:${frameR.left - mainR.left}px; top:${frameR.top - mainR.top}px; width:${frameR.width}px; height:${frameR.height}px; opacity:0; z-index:30; will-change:transform,opacity; transform-origin:top left; transition:transform ${enlargeTransitionMs}ms ease, opacity ${enlargeTransitionMs}ms ease; border-radius:${openedImageBorderRadius}; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.35);`;
     const rawSrc = parent.dataset.src || (el.querySelector('img') as HTMLImageElement)?.src || '';
     const rawAlt = parent.dataset.alt || (el.querySelector('img') as HTMLImageElement)?.alt || '';
-    const img = document.createElement('img');
-    img.src = rawSrc;
-    img.alt = rawAlt;
-    img.style.cssText = `width:100%; height:100%; object-fit:cover; filter:${grayscale ? 'grayscale(1)' : 'none'};`;
-    overlay.appendChild(img);
+    const mediaType = parent.dataset.mediaType || 'image';
+    const videoUrl = parent.dataset.videoUrl || '';
+    const videoKind = parent.dataset.videoKind || '';
+
+    if (mediaType === 'video' && videoUrl) {
+      if (videoKind === 'youtube') {
+        const iframe = document.createElement('iframe');
+        iframe.src = videoUrl;
+        iframe.title = rawAlt || 'Video';
+        iframe.allow =
+          'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+        iframe.allowFullscreen = true;
+        iframe.style.cssText = 'width:100%; height:100%; border:0; background:#000;';
+        overlay.appendChild(iframe);
+      } else {
+        const video = document.createElement('video');
+        video.src = videoUrl;
+        video.controls = true;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.style.cssText = 'width:100%; height:100%; object-fit:cover; background:#000;';
+        overlay.appendChild(video);
+      }
+
+      // Keep a poster image for the close animation.
+      const poster = document.createElement('img');
+      poster.src = rawSrc;
+      poster.alt = rawAlt;
+      poster.className = 'enlarge__poster';
+      poster.style.cssText = 'display:none;';
+      overlay.appendChild(poster);
+    } else {
+      const img = document.createElement('img');
+      img.src = rawSrc;
+      img.alt = rawAlt;
+      img.style.cssText = `width:100%; height:100%; object-fit:cover; filter:${grayscale ? 'grayscale(1)' : 'none'};`;
+      overlay.appendChild(img);
+    }
     viewerRef.current!.appendChild(overlay);
     const tx0 = tileR.left - frameR.left;
     const ty0 = tileR.top - frameR.top;
@@ -826,6 +895,9 @@ export default function DomeGallery({
                   className="sphere-item absolute m-auto"
                   data-src={it.src}
                   data-alt={it.alt}
+                  data-media-type={it.type}
+                  data-video-url={it.videoUrl || ''}
+                  data-video-kind={it.videoKind || ''}
                   data-offset-x={it.x}
                   data-offset-y={it.y}
                   data-size-x={it.sizeX}
@@ -847,7 +919,11 @@ export default function DomeGallery({
                     className="item__image absolute block overflow-hidden cursor-pointer bg-gray-200 transition-transform duration-300"
                     role="button"
                     tabIndex={0}
-                    aria-label={it.alt || 'Open image'}
+                    aria-label={
+                      it.type === 'video'
+                        ? it.alt || 'Open video'
+                        : it.alt || 'Open image'
+                    }
                     onClick={e => {
                       if (draggingRef.current) return;
                       if (movedRef.current) return;
@@ -879,6 +955,18 @@ export default function DomeGallery({
                         filter: `var(--image-filter, ${grayscale ? 'grayscale(1)' : 'none'})`
                       }}
                     />
+                    {it.type === 'video' && (
+                      <span
+                        className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/35"
+                        aria-hidden
+                      >
+                        <span className="flex size-10 items-center justify-center rounded-full bg-tant-gold text-tant-green-deep shadow-md">
+                          <svg viewBox="0 0 24 24" className="ms-0.5 size-5 fill-current" aria-hidden>
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </span>
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

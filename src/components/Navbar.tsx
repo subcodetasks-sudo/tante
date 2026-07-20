@@ -16,6 +16,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useSiteStore } from "@/store/siteStore"
+import { SiteLogo } from "@/components/SiteLogo"
 
 const sectionLinks = [
   { label: "من نحن", hash: "about" },
@@ -41,15 +43,16 @@ const mobileCtaBase =
 const mobileLinkBase =
   "site-header__mobile-link font-display text-lg tracking-wide text-tant-gold/90"
 
-const WHATSAPP_NUMBER = ""
-const whatsappHref = WHATSAPP_NUMBER
-  ? `https://wa.me/${WHATSAPP_NUMBER}`
-  : "https://wa.me/"
-
 const MENU_EASE = "power3.out"
 const MENU_DURATION = 0.26
 const MENU_STAGGER = 0.04
 const MOBILE_MQ = "(max-width: 767px)"
+
+function whatsappHrefFromSettings(whatsapp: string | null | undefined) {
+  if (!whatsapp) return "https://wa.me/"
+  const digits = whatsapp.replace(/\D/g, "")
+  return digits ? `https://wa.me/${digits}` : whatsapp
+}
 
 function isMobileViewport() {
   return window.matchMedia(MOBILE_MQ).matches
@@ -83,6 +86,8 @@ function blurNavLink(e: React.PointerEvent<HTMLAnchorElement>) {
 export function Navbar() {
   const location = useLocation()
   const onHome = location.pathname === "/"
+  const settings = useSiteStore((s) => s.settings)
+  const whatsappHref = whatsappHrefFromSettings(settings?.social.whatsapp)
   const glassRef = useRef<HTMLDivElement | null>(null)
   const barRef = useRef<HTMLDivElement | null>(null)
   const itemsRef = useRef<HTMLLIElement[]>([])
@@ -332,9 +337,9 @@ export function Navbar() {
               onPointerUp={blurNavLink}
               onClick={closeMenu}
             >
-              <img
-                src="/logo.webp"
-                alt="تنت"
+              <SiteLogo
+                src={settings?.logo}
+                alt={settings?.restaurant_name ?? "تنت"}
                 className="site-header__logo h-10 w-10 object-contain md:h-11 md:w-11"
               />
             </Link>

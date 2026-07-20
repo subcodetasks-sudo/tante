@@ -1,30 +1,68 @@
+import { toast } from "sonner"
 import { cn } from "@/lib/utils"
-import type { MenuCategory, MenuItem } from "@/data/menu"
-import { Heart } from "lucide-react"
-
-const ribbonByCategory: Record<MenuCategory, string> = {
-  // Keep category badge styling consistent across all cards.
-  لفائف: "bg-tant-gold text-tant-green-deep",
-  جانبية: "bg-tant-gold text-tant-green-deep",
-  مشروبات: "bg-tant-gold text-tant-green-deep",
-  حلويات: "bg-tant-gold text-tant-green-deep",
-}
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { useFavoritesStore } from "@/store/favoritesStore"
+import type { Product } from "@/types/api"
+import { Flame, Heart } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 
 type MenuItemCardProps = {
-  item: MenuItem
+  item: Product
+  categoryName?: string
+  categoryId?: number
   className?: string
   onAdd?: () => void
-  onFavorite?: () => void
-  isFavorite?: boolean
 }
 
 export function MenuItemCard({
   item,
+  categoryName,
+  categoryId,
   className,
   onAdd,
-  onFavorite,
-  isFavorite = false,
 }: MenuItemCardProps) {
+  const isFavorite = useFavoritesStore((s) => s.isFavorite(item.id))
+  const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite)
+
+  const favoriteLabel = isFavorite
+    ? "إزالة من المفضلة"
+    : "إضافة إلى المفضلة"
+
+  const handleFavorite = () => {
+    const nextFavorite = !isFavorite
+    const resolvedCategoryId = categoryId ?? item.category_id ?? item.category?.id
+    const category =
+      resolvedCategoryId != null
+        ? {
+            id: resolvedCategoryId,
+            name_ar:
+              categoryName?.trim() ||
+              item.category?.name_ar ||
+              item.category?.name_en ||
+              "",
+            name_en: item.category?.name_en || categoryName?.trim() || "",
+          }
+        : item.category
+
+    toggleFavorite(item, category)
+    toast.success(
+      nextFavorite
+        ? "تمت إضافة المنتج إلى المفضلة"
+        : "تمت إزالة المنتج من المفضلة",
+    )
+  }
+
+  const resolvedCategory =
+    categoryName?.trim() ||
+    item.category?.name_ar?.trim() ||
+    item.category?.name_en?.trim() ||
+    ""
+
   return (
     <article
       className={cn(
@@ -34,41 +72,79 @@ export function MenuItemCard({
     >
       <div className="p-1">
         <div className="relative flex aspect-4/3 w-full items-center justify-center overflow-hidden rounded-t-2xl bg-linear-to-b from-tant-green/35 to-tant-green-deep/65">
-          <span className="font-display text-sm tracking-wider text-tant-gold/80">
-            {item.imageLabel}
-          </span>
-          <button
-            type="button"
-            onClick={onFavorite}
-            aria-label={isFavorite ? "إزالة من المفضلة" : "إضافة إلى المفضلة"}
-            className={cn(
-              "absolute inset-e-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/20 text-tant-cream transition-colors hover:bg-black/35",
-              isFavorite && "bg-tant-gold/90 text-tant-green-deep hover:bg-tant-gold",
-            )}
-          >
-            <Heart className={cn("h-4 w-4", isFavorite && "fill-current")} />
-          </button>
-        </div>
-
-        <div>
-          <div
-            className={cn(
-              "rounded-b-full px-3 py-1 text-center text-[0.65rem] font-medium tracking-wide",
-              ribbonByCategory[item.category],
-            )}
-          >
-            {item.category}
+          {item.image ? (
+            <img
+              src={item.image}
+              alt={item.name_ar}
+              className="size-full object-cover"
+            />
+          ) : (
+            <span className="px-4 text-center font-display text-sm tracking-wider text-tant-gold/80">
+              {item.name_ar}
+            </span>
+          )}
+          <div className="absolute inset-e-2 top-2 z-10">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger
+                  delay={300}
+                  render={(props) => (
+                    <button
+                      {...props}
+                      type="button"
+                      onClick={(event) => {
+                        props.onClick?.(event)
+                        handleFavorite()
+                      }}
+                      aria-label={favoriteLabel}
+                      aria-pressed={isFavorite}
+                      className={cn(
+                        props.className,
+                        "inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/20 text-tant-cream transition-colors hover:bg-black/35",
+                      )}
+                    >
+                      <Heart
+                        className={cn(
+                          "h-4 w-4 transition-colors",
+                          isFavorite && "fill-red-500 text-red-500",
+                        )}
+                      />
+                    </button>
+                  )}
+                />
+                <TooltipContent side="bottom">{favoriteLabel}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
+
+        {resolvedCategory ? (
+          <div>
+            <div className="rounded-b-full bg-tant-gold px-3 py-1 text-center text-[0.65rem] font-medium tracking-wide text-tant-green-deep">
+              {resolvedCategory}
+            </div>
+          </div>
+        ) : null}
       </div>
 
-      <div className="flex items-center justify-between gap-3 px-4 py-3">
+      <div className="flex flex-1 flex-col gap-2 px-4 py-3">
         <h3 className="min-w-0 truncate font-display text-base text-tant-cream">
-          {item.name}
+          {item.name_ar}
         </h3>
-        <span className="shrink-0 text-sm font-medium text-tant-gold-bright">
-          {item.price} SAR
-        </span>
+
+        <div className="mt-auto flex items-center justify-between gap-3">
+          {item.calories != null ? (
+            <span className="inline-flex items-center gap-1 text-xs text-tant-muted">
+              <Flame className="size-3.5 shrink-0 text-tant-gold/80" aria-hidden />
+              <span>{item.calories} سعرة</span>
+            </span>
+          ) : (
+            <span />
+          )}
+          <span className="shrink-0 text-sm font-medium text-tant-gold-bright">
+            {item.price} ر.س
+          </span>
+        </div>
       </div>
 
       {onAdd ? (
@@ -85,3 +161,23 @@ export function MenuItemCard({
     </article>
   )
 }
+
+export function MenuItemCardSkeleton() {
+  return (
+    <div className="glass-panel flex flex-col overflow-hidden rounded-2xl border border-tant-gold/25 shadow-md shadow-black/20">
+      <div className="p-1">
+        <div className="relative aspect-4/3 w-full overflow-hidden rounded-t-2xl">
+          <Skeleton className="size-full" />
+        </div>
+      </div>
+      <div className="flex flex-1 flex-col gap-3 px-4 py-3">
+        <Skeleton className="h-5 w-2/3" />
+        <div className="mt-auto flex items-center justify-between gap-3">
+          <Skeleton className="h-4 w-1/3" />
+          <Skeleton className="h-4 w-1/4" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
