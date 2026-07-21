@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { AnimatePresence, motion, useScroll, useTransform } from "motion/react"
 import { MapPin } from "lucide-react"
+import { ElfsightGoogleReviews } from "@/components/ElfsightGoogleReviews"
 import { ScrollAnimationWrapper } from "@/components/ScrollAnimationWrapper"
 import SpecularButton from "@/components/SpecularButton"
 import { Marquee } from "@/components/ui/marquee"
@@ -71,7 +72,10 @@ export default function LandingPage() {
         [mostOrdered],
     )
 
-    const testimonialItems = useMemo(() => testimonials, [testimonials])
+    const testimonialItems = useMemo(
+        () => testimonials.filter((item) => Boolean(item.video)),
+        [testimonials],
+    )
 
     useEffect(() => {
         if (!location.hash) return
@@ -104,6 +108,7 @@ export default function LandingPage() {
 
     const meatY = useTransform(aboutScrollY, [0, 1], [-15, 35])
     const molokheyaY = useTransform(aboutScrollY, [0, 1], [25, -25])
+    const mahsheY = useTransform(aboutScrollY, [0, 1], [10, -20])
 
     return (
         <>
@@ -113,6 +118,7 @@ export default function LandingPage() {
             </title>
             {/* Hero — expands to full-bleed as it scrolls with the page */}
             <section
+                id="home"
                 ref={heroRef}
                 className="relative -mt-[5.25rem] h-[100dvh] md:-mt-[6rem]"
             >
@@ -239,7 +245,7 @@ export default function LandingPage() {
                 <section
                     ref={aboutRef}
                     id="about"
-                    className="scroll-mt-28 grid items-center gap-10 py-16 md:grid-cols-2 md:gap-14"
+                    className="scroll-mt-28 grid items-center gap-10 pt-24 pb-16 md:grid-cols-2 md:gap-14 md:pt-32"
                 >
                     <ScrollAnimationWrapper
                         typeMd="fade-left"
@@ -254,21 +260,6 @@ export default function LandingPage() {
 
                     <div className="order-1 space-y-6 text-center md:order-1 md:text-start">
                         <ScrollAnimationWrapper typeMd="fade-right">
-                            <motion.div
-                                style={{ y: molokheyaY }}
-                                className="pointer-events-none flex justify-start"
-                            >
-                                <img
-                                    src="/bowel-of-molokheya.png"
-                                    alt="Bowl of Molokheya"
-                                    className="h-32 w-32 rotate-6 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] sm:h-36 sm:w-36 md:h-44 md:w-44"
-                                    fetchPriority="high"
-                                    loading="eager"
-                                />
-                            </motion.div>
-                        </ScrollAnimationWrapper>
-
-                        <ScrollAnimationWrapper typeMd="fade-right" delay={0.1}>
                             <div className="space-y-4">
                                 <h2 className="font-display text-3xl text-tant-gold md:text-4xl">
                                     {about?.title ?? "من نحن"}
@@ -284,18 +275,32 @@ export default function LandingPage() {
                         </ScrollAnimationWrapper>
 
                         <ScrollAnimationWrapper delay={0.2}>
-                            <motion.div
-                                style={{ y: meatY }}
-                                className="pointer-events-none flex justify-end"
-                            >
-                                <img
-                                    src="/bowel-of-meat.png"
-                                    alt="Bowl of Meat"
-                                    className="h-36 w-36 -rotate-6 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] sm:h-40 sm:w-40 md:h-48 md:w-48"
+                            <div className="pointer-events-none flex flex-wrap items-center justify-center gap-2 sm:gap-3 md:gap-4">
+                                <motion.img
+                                    style={{ y: molokheyaY }}
+                                    src="/bowel-of-molokheya.png"
+                                    alt="Bowl of Molokheya"
+                                    className="h-28 w-28 rotate-6 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] sm:h-32 sm:w-32 md:h-40 md:w-40"
                                     fetchPriority="high"
                                     loading="eager"
                                 />
-                            </motion.div>
+                                <motion.img
+                                    style={{ y: meatY }}
+                                    src="/bowel-of-meat.png"
+                                    alt="Bowl of Meat"
+                                    className="h-32 w-32 -rotate-6 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] sm:h-36 sm:w-36 md:h-44 md:w-44"
+                                    fetchPriority="high"
+                                    loading="eager"
+                                />
+                                <motion.img
+                                    style={{ y: mahsheY }}
+                                    src="/bowel-of-mahshe.png"
+                                    alt="Bowl of Mahshe"
+                                    className="h-28 w-28 rotate-3 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] sm:h-32 sm:w-32 md:h-40 md:w-40"
+                                    fetchPriority="high"
+                                    loading="eager"
+                                />
+                            </div>
                         </ScrollAnimationWrapper>
                     </div>
                 </section>
@@ -419,6 +424,24 @@ export default function LandingPage() {
                             </li>
                         ))}
                     </ul>
+
+                    <ScrollAnimationWrapper
+                        type="fade-up"
+                        className="mx-auto max-w-4xl overflow-hidden rounded-xl border border-tant-gold/40 shadow-[0_0_0_4px_color-mix(in_srgb,var(--tant-gold)_12%,transparent)]"
+                    >
+                        <iframe
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3710.880381373771!2d39.15991049999999!3d21.5515321!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x15c3d190c1f4f1c7%3A0xeeda0c42385dd571!2z2YXYt9i52YUg2LfZhti3INis2K_YqQ!5e0!3m2!1sen!2seg!4v1784640563961!5m2!1sen!2seg"
+                            title="موقع الفرع على الخريطة"
+                            width="600"
+                            height="450"
+                            className="h-[450px] w-full border-0"
+                            allowFullScreen
+                            loading="lazy"
+                            referrerPolicy="strict-origin-when-cross-origin"
+                        />
+                    </ScrollAnimationWrapper>
+
+                    <ElfsightGoogleReviews />
                 </section>
 
                 {/* Customers Feedback */}

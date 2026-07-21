@@ -20,12 +20,16 @@ import { useSiteStore } from "@/store/siteStore"
 import { SiteLogo } from "@/components/SiteLogo"
 
 const sectionLinks = [
+  { label: "الرئيسية", hash: "home" },
   { label: "من نحن", hash: "about" },
   { label: "القائمة", to: "/menu" as const },
   { label: "المعرض", to: "/gallery" as const },
   { label: "الفروع", hash: "locations" },
   { label: "آراء العملاء", hash: "feedback" },
 ] as const
+
+type SectionLink = (typeof sectionLinks)[number]
+type HashSectionLink = Extract<SectionLink, { hash: string }>
 
 function sectionHref(hash: string) {
   return `/#${hash}`
@@ -72,6 +76,11 @@ function resetDesktopGlass(
   if (items.length) gsap.set(items, { clearProps: "y,opacity" })
 }
 
+function getMenuItems(menu: HTMLUListElement | null) {
+  if (!menu) return [] as HTMLLIElement[]
+  return Array.from(menu.children) as HTMLLIElement[]
+}
+
 /** Backdrop-filter + :focus paints a square glitch — drop mouse/touch focus after press. */
 function blurNavLink(e: React.PointerEvent<HTMLAnchorElement>) {
   if (
@@ -90,14 +99,47 @@ export function Navbar() {
   const whatsappHref = whatsappHrefFromSettings(settings?.social.whatsapp)
   const glassRef = useRef<HTMLDivElement | null>(null)
   const barRef = useRef<HTMLDivElement | null>(null)
-  const itemsRef = useRef<HTMLLIElement[]>([])
+  const mobileMenuRef = useRef<HTMLUListElement | null>(null)
   const tlRef = useRef<gsap.core.Timeline | null>(null)
 
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
+  const [activeSection, setActiveSection] = useState<string>("home")
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined" ? isMobileViewport() : false,
   )
+
+  useEffect(() => {
+    if (!onHome) return
+
+    const sectionIds = sectionLinks
+      .filter((link): link is HashSectionLink => "hash" in link)
+      .map((link) => link.hash)
+
+    const observerOptions: IntersectionObserverInit = {
+      root: null,
+      rootMargin: "-20% 0px -60% 0px",
+      threshold: 0,
+    }
+
+    const handleIntersect: IntersectionObserverCallback = (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id)
+        }
+      })
+    }
+
+    const observer = new IntersectionObserver(handleIntersect, observerOptions)
+    sectionIds.forEach((id) => {
+      const el = document.getElementById(id)
+      if (el) observer.observe(el)
+    })
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [onHome])
 
   useEffect(() => {
     const mq = window.matchMedia(MOBILE_MQ)
@@ -160,7 +202,8 @@ export function Navbar() {
     const barEl = barRef.current
     if (!glassEl || !barEl || !isMobileViewport()) return null
 
-    gsap.set(itemsRef.current, { y: 16, opacity: 0 })
+    const items = getMenuItems(mobileMenuRef.current)
+    gsap.set(items, { y: 16, opacity: 0 })
 
     const tl = gsap.timeline({ paused: true })
 
@@ -171,7 +214,7 @@ export function Navbar() {
     })
 
     tl.to(
-      itemsRef.current,
+      items,
       {
         y: 0,
         opacity: 1,
@@ -190,7 +233,7 @@ export function Navbar() {
     if (!glassEl) return
 
     if (!isMobileViewport()) {
-      resetDesktopGlass(glassEl, itemsRef.current)
+      resetDesktopGlass(glassEl, getMenuItems(mobileMenuRef.current))
       return
     }
 
@@ -215,7 +258,7 @@ export function Navbar() {
       if (!mq.matches) {
         setIsHamburgerOpen(false)
         setIsExpanded(false)
-        resetDesktopGlass(glassEl, itemsRef.current)
+        resetDesktopGlass(glassEl, getMenuItems(mobileMenuRef.current))
         tlRef.current?.kill()
         tlRef.current = null
         return
@@ -308,10 +351,6 @@ export function Navbar() {
     }
   }, [isExpanded, closeMenu])
 
-  const setItemRef = (i: number) => (el: HTMLLIElement | null) => {
-    if (el) itemsRef.current[i] = el
-  }
-
   return (
     <header className="site-header fixed inset-x-0 top-0 z-50 px-4 pt-5 md:px-8 md:pt-6">
       <nav
@@ -368,7 +407,7 @@ export function Navbar() {
 
                 const href = sectionHref(link.hash)
                 const isSectionActive =
-                  onHome && location.hash === `#${link.hash}`
+                  onHome && activeSection === link.hash
 
                 return (
                   <li key={link.label}>
@@ -450,6 +489,7 @@ export function Navbar() {
           </div>
 
           <ul
+            ref={mobileMenuRef}
             id="site-mobile-menu"
             className={cn(
               "mobile-nav-content",
@@ -459,10 +499,10 @@ export function Navbar() {
             )}
             aria-hidden={!isExpanded}
           >
-            {sectionLinks.map((link, idx) => {
+            {sectionLinks.map((link) => {
               if ("to" in link) {
                 return (
-                  <li key={link.label} ref={setItemRef(idx)}>
+                  <li key={link.label}>
                     <NavLink
                       to={link.to}
                       viewTransition={true}
@@ -483,10 +523,10 @@ export function Navbar() {
 
               const href = sectionHref(link.hash)
               const isSectionActive =
-                onHome && location.hash === `#${link.hash}`
+                onHome && activeSection === link.hash
 
               return (
-                <li key={link.label} ref={setItemRef(idx)}>
+                <li key={link.label}>
                   <Link
                     to={href}
                     viewTransition={true}
@@ -503,10 +543,7 @@ export function Navbar() {
               )
             })}
 
-            <li
-              ref={setItemRef(sectionLinks.length)}
-              className="mobile-nav-cta-item"
-            >
+            <li className="mobile-nav-cta-item">
               <a
                 href={whatsappHref}
                 target="_blank"
