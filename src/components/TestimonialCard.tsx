@@ -25,6 +25,7 @@ export function TestimonialCard({ testimonial, className = "" }: TestimonialCard
                             src={image}
                             alt={name}
                             className="size-11 shrink-0 rounded-full border border-tant-gold/40 object-cover"
+                            draggable={false}
                         />
                     ) : (
                         <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-tant-gold/40 bg-tant-green font-display text-lg text-tant-gold">
