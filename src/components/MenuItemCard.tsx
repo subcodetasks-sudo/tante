@@ -6,7 +6,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { SiteLogo } from "@/components/SiteLogo"
 import { useFavoritesStore } from "@/store/favoritesStore"
+import { useSiteStore } from "@/store/siteStore"
 import type { Product, ProductWeight } from "@/types/api"
 import { Flame, Heart, Scale } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -28,6 +30,7 @@ export function MenuItemCard({
 }: MenuItemCardProps) {
   const isFavorite = useFavoritesStore((s) => s.isFavorite(item.id))
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite)
+  const settings = useSiteStore((s) => s.settings)
 
   const favoriteLabel = isFavorite
     ? "إزالة من المفضلة"
@@ -83,6 +86,7 @@ export function MenuItemCard({
               src={item.image}
               alt={item.name_ar}
               className="size-full object-cover"
+              draggable={false}
             />
           ) : (
             <span className="px-4 text-center font-display text-sm tracking-wider text-tant-gold/80">
@@ -106,7 +110,7 @@ export function MenuItemCard({
                       aria-pressed={isFavorite}
                       className={cn(
                         props.className,
-                        "inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/20 text-tant-cream transition-colors hover:bg-black/35",
+                        "inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-tant-cream transition-colors hover:bg-black/35",
                       )}
                     >
                       <Heart
@@ -122,6 +126,11 @@ export function MenuItemCard({
               </Tooltip>
             </TooltipProvider>
           </div>
+          <SiteLogo
+            src={settings?.logo}
+            alt=""
+            className="pointer-events-none absolute inset-s-2 bottom-2 z-10 size-10 rounded-full object-cover opacity-50"
+          />
         </div>
 
         {resolvedCategory ? (
