@@ -144,6 +144,7 @@ export default function LandingPage() {
                             playsInline
                             aria-label="المشاوي من عمائلي — طعمها غير"
                             className="absolute inset-0 size-full object-cover"
+                            preload="auto"
                         />
                         <div
                             className="absolute inset-0 bg-gradient-to-t from-tant-green-deep/85 via-tant-green-deep/45 to-tant-green-deep/25"
@@ -257,6 +258,8 @@ export default function LandingPage() {
                                     src="/bowel-of-molokheya.png"
                                     alt="Bowl of Molokheya"
                                     className="h-32 w-32 rotate-6 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] sm:h-36 sm:w-36 md:h-44 md:w-44"
+																		fetchPriority="high"
+																		loading="eager"
                                 />
                             </motion.div>
                         </ScrollAnimationWrapper>
@@ -285,6 +288,8 @@ export default function LandingPage() {
                                     src="/bowel-of-meat.png"
                                     alt="Bowl of Meat"
                                     className="h-36 w-36 -rotate-6 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] sm:h-40 sm:w-40 md:h-48 md:w-48"
+																		fetchPriority="high"
+																		loading="eager"
                                 />
                             </motion.div>
                         </ScrollAnimationWrapper>

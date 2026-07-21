@@ -19,23 +19,19 @@ export default function MenuPage() {
     void fetchMenu()
   }, [fetchMenu])
 
-  useEffect(() => {
-    if (categories.length === 0) return
-    if (categoryId == null || !categories.some((c) => c.id === categoryId)) {
-      setCategoryId(categories[0].id)
+  const activeCategory = useMemo(() => {
+    if (categories.length === 0) return undefined
+    if (categoryId != null && categories.some((c) => c.id === categoryId)) {
+      return categories.find((c) => c.id === categoryId)
     }
+    return categories[0]
   }, [categories, categoryId])
-
-  const activeCategory = useMemo(
-    () => categories.find((c) => c.id === categoryId) ?? categories[0],
-    [categories, categoryId],
-  )
 
   const filtered = activeCategory?.products ?? []
 
   useEffect(() => {
     window.scrollTo(0, 0)
-  }, [categoryId])
+  }, [activeCategory?.id])
 
   return (
     <>
