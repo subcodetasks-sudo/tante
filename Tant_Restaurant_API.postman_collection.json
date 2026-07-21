@@ -1,0 +1,287 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-tant-restaurant",
+    "name": "مطعم طنط - Restaurant API",
+    "description": "جميع الـ API Endpoints لمشروع مطعم طنط",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Hero",
+      "item": [
+        {
+          "name": "Get Hero",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/hero",
+              "host": ["{{base_url}}"],
+              "path": ["hero"]
+            },
+            "description": "جلب بيانات قسم الهيرو (title, description, content, buttons, video)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "About",
+      "item": [
+        {
+          "name": "Get About",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/about",
+              "host": ["{{base_url}}"],
+              "path": ["about"]
+            },
+            "description": "جلب بيانات قسم من نحن (title, description, content, image)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Galleries",
+      "item": [
+        {
+          "name": "Get Galleries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/galleries",
+              "host": ["{{base_url}}"],
+              "path": ["galleries"]
+            },
+            "description": "جلب المعارض (صورة أو لينك فيديو)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Branches",
+      "item": [
+        {
+          "name": "Get Branch Content",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/branch-content",
+              "host": ["{{base_url}}"],
+              "path": ["branch-content"]
+            },
+            "description": "جلب عنوان ووصف قسم الفروع"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Branches",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/branches",
+              "host": ["{{base_url}}"],
+              "path": ["branches"]
+            },
+            "description": "جلب قائمة الفروع (name, address, open_from, open_to)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Menu",
+      "item": [
+        {
+          "name": "Get Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/categories",
+              "host": ["{{base_url}}"],
+              "path": ["categories"]
+            },
+            "description": "جلب كل التصنيفات"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/products",
+              "host": ["{{base_url}}"],
+              "path": ["products"]
+            },
+            "description": "جلب كل المنتجات النشطة"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Products By Category",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/products?category_id=1",
+              "host": ["{{base_url}}"],
+              "path": ["products"],
+              "query": [
+                {
+                  "key": "category_id",
+                  "value": "1",
+                  "description": "ID التصنيف"
+                }
+              ]
+            },
+            "description": "جلب منتجات تصنيف معين"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Full Menu",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/menu",
+              "host": ["{{base_url}}"],
+              "path": ["menu"]
+            },
+            "description": "جلب المنيو كاملة (تصنيفات + منتجات)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Most Ordered",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/most-ordered",
+              "host": ["{{base_url}}"],
+              "path": ["most-ordered"]
+            },
+            "description": "جلب قسم الأكثر طلبًا (title, description, products المعلّمة Flag)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Testimonials",
+      "item": [
+        {
+          "name": "Get Testimonials",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/testimonials",
+              "host": ["{{base_url}}"],
+              "path": ["testimonials"]
+            },
+            "description": "جلب آراء العملاء"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "item": [
+        {
+          "name": "Get Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/settings",
+              "host": ["{{base_url}}"],
+              "path": ["settings"]
+            },
+            "description": "جلب إعدادات المطعم (الاسم، اللوجو، الوصف، روابط السوشيال)"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
