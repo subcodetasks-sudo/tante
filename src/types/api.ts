@@ -1,9 +1,17 @@
+export type ProductWeight = {
+  id: number
+  weight: string
+  calories: string | null
+  price: number
+}
+
 export type Product = {
   id: number
   name_ar: string
   name_en: string
-  calories: number | null
-  price: number
+  calories: number | string | null
+  price: number | null
+  weights?: ProductWeight[]
   image: string | null
   category_id?: number
   category?: {

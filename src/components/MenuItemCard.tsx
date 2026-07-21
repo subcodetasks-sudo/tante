@@ -7,8 +7,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useFavoritesStore } from "@/store/favoritesStore"
-import type { Product } from "@/types/api"
-import { Flame, Heart } from "lucide-react"
+import type { Product, ProductWeight } from "@/types/api"
+import { Flame, Heart, Scale } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 
 type MenuItemCardProps = {
@@ -62,6 +62,12 @@ export function MenuItemCard({
     item.category?.name_ar?.trim() ||
     item.category?.name_en?.trim() ||
     ""
+
+  const weightOptions = (item.weights ?? []).filter(
+    (option): option is ProductWeight =>
+      Boolean(option?.weight?.trim()) && option.price != null,
+  )
+  const hasWeightOptions = weightOptions.length > 0
 
   return (
     <article
@@ -132,19 +138,68 @@ export function MenuItemCard({
           {item.name_ar}
         </h3>
 
-        <div className="mt-auto flex items-center justify-between gap-3">
-          {item.calories != null ? (
-            <span className="inline-flex items-center gap-1 text-xs text-tant-muted">
-              <Flame className="size-3.5 shrink-0 text-tant-gold/80" aria-hidden />
-              <span>{item.calories} سعرة</span>
-            </span>
-          ) : (
-            <span />
-          )}
-          <span className="shrink-0 text-sm font-medium text-tant-gold-bright">
-            {item.price} ر.س
-          </span>
-        </div>
+        {hasWeightOptions ? (
+          <div className="mt-auto space-y-2">
+            <div className="flex items-center gap-1.5 text-[0.65rem] font-medium tracking-wide text-tant-muted">
+              <Scale className="size-3 shrink-0 text-tant-gold/75" aria-hidden />
+              <span>الأحجام المتاحة</span>
+            </div>
+            <div
+              className={cn(
+                "grid gap-1.5",
+                weightOptions.length > 1 ? "grid-cols-2" : "grid-cols-1",
+              )}
+            >
+              {weightOptions.map((option) => (
+                <div
+                  key={option.id}
+                  className="relative overflow-hidden rounded-xl border border-tant-gold/20 bg-linear-to-br from-tant-green-deep/55 to-tant-green/25 shadow-inner shadow-black/10 transition-[border-color,transform] duration-200 hover:-translate-y-px hover:border-tant-gold/45"
+                >
+                  <div className="flex min-h-10 items-stretch">
+                    <div className="flex flex-1 items-center justify-center px-2 py-2">
+                      <span className="font-display text-xs leading-none text-tant-gold-bright">
+                        {option.weight}
+                      </span>
+                    </div>
+                    <div className="flex flex-1 items-center justify-center border-s border-tant-gold/15 bg-tant-green-deep/25 px-2 py-2">
+                      <span className="text-xs font-semibold leading-none text-tant-cream">
+                        {option.price} ر.س
+                      </span>
+                    </div>
+                  </div>
+                  {option.calories ? (
+                    <div className="flex items-center justify-center gap-1 border-t border-tant-gold/10 px-2 py-1 text-[0.6rem] text-tant-muted">
+                      <Flame
+                        className="size-2.5 shrink-0 text-tant-gold/70"
+                        aria-hidden
+                      />
+                      <span>{option.calories} سعرة</span>
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="mt-auto flex items-center justify-between gap-3">
+            {item.calories != null && item.calories !== "" ? (
+              <span className="inline-flex items-center gap-1 text-xs text-tant-muted">
+                <Flame
+                  className="size-3.5 shrink-0 text-tant-gold/80"
+                  aria-hidden
+                />
+                <span>{item.calories} سعرة</span>
+              </span>
+            ) : (
+              <span />
+            )}
+            {item.price != null ? (
+              <span className="shrink-0 text-sm font-medium text-tant-gold-bright">
+                {item.price} ر.س
+              </span>
+            ) : null}
+          </div>
+        )}
       </div>
 
       {onAdd ? (
