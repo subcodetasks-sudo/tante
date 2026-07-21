@@ -161,19 +161,19 @@ export default function LandingPage() {
                         >
                             <motion.p
                                 variants={heroTextItem}
-                                className="font-display text-xl tracking-[0.15em] text-tant-gold/80 uppercase md:text-2xl lg:text-3xl"
+                                className="font-display text-5xl tracking-[0.15em] text-tant-gold/80 uppercase drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)] md:text-6xl lg:text-7xl"
                             >
                                 {settings?.restaurant_name ?? "طنط"}
                             </motion.p>
                             <motion.h1
                                 variants={heroTextItem}
-                                className="font-arabic text-5xl leading-tight text-tant-gold drop-shadow-sm md:text-6xl lg:text-7xl"
+                                className="font-arabic text-2xl leading-tight text-tant-gold drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] md:text-3xl lg:text-4xl"
                             >
                                 {hero?.title ?? "طعم الأصالة"}
                             </motion.h1>
                             <motion.p
                                 variants={heroTextItem}
-                                className="mx-auto max-w-md text-base leading-relaxed text-tant-cream/90 md:text-lg"
+                                className="mx-auto max-w-md text-base leading-relaxed text-tant-cream/90 drop-shadow-[0_1px_6px_rgba(0,0,0,0.7)] md:text-lg"
                             >
                                 {hero?.description ??
                                     "نكهات الشارع العربي الأصيل، بأناقة وعناية — من شاورما الفحم إلى بهارات التراث المتوارثة جيلاً بعد جيل."}
@@ -181,7 +181,7 @@ export default function LandingPage() {
                             {hero?.content ? (
                                 <motion.p
                                     variants={heroTextItem}
-                                    className="mx-auto max-w-lg text-sm leading-relaxed text-tant-cream/75 md:text-base"
+                                    className="mx-auto max-w-lg text-sm leading-relaxed text-tant-cream/75 drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)] md:text-base"
                                 >
                                     {hero.content}
                                 </motion.p>
@@ -275,30 +275,33 @@ export default function LandingPage() {
                         </ScrollAnimationWrapper>
 
                         <ScrollAnimationWrapper delay={0.2}>
-                            <div className="pointer-events-none flex flex-wrap items-center justify-center gap-2 sm:gap-3 md:gap-4">
+                            <div className="pointer-events-none flex flex-wrap items-center justify-center gap-2 sm:gap-3 md:flex-nowrap md:justify-start md:gap-3">
                                 <motion.img
                                     style={{ y: molokheyaY }}
                                     src="/bowel-of-molokheya.png"
                                     alt="Bowl of Molokheya"
-                                    className="h-28 w-28 rotate-6 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] sm:h-32 sm:w-32 md:h-40 md:w-40"
+                                    className="h-28 w-28 shrink-0 rotate-6 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] sm:h-32 sm:w-32 md:h-36 md:w-36"
                                     fetchPriority="high"
                                     loading="eager"
+                                    draggable={false}
                                 />
                                 <motion.img
                                     style={{ y: meatY }}
                                     src="/bowel-of-meat.png"
                                     alt="Bowl of Meat"
-                                    className="h-32 w-32 -rotate-6 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] sm:h-36 sm:w-36 md:h-44 md:w-44"
+                                    className="h-32 w-32 shrink-0 -rotate-6 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] sm:h-36 sm:w-36 md:h-40 md:w-40"
                                     fetchPriority="high"
                                     loading="eager"
+                                    draggable={false}
                                 />
                                 <motion.img
                                     style={{ y: mahsheY }}
                                     src="/bowel-of-mahshe.png"
                                     alt="Bowl of Mahshe"
-                                    className="h-28 w-28 rotate-3 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] sm:h-32 sm:w-32 md:h-40 md:w-40"
+                                    className="h-28 w-28 shrink-0 rotate-3 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] sm:h-32 sm:w-32 md:h-36 md:w-36"
                                     fetchPriority="high"
                                     loading="eager"
+                                    draggable={false}
                                 />
                             </div>
                         </ScrollAnimationWrapper>
