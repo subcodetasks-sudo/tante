@@ -40,6 +40,7 @@ export type Testimonial = {
   rating: number
   review: string
   image: string | null
+  video: string | null
 }
 
 export type Branch = {
@@ -48,6 +49,12 @@ export type Branch = {
   address: string
   open_from: string
   open_to: string
+}
+
+export type BranchContent = {
+  id: number
+  title: string
+  description: string
 }
 
 export type SocialLinks = {
@@ -65,6 +72,16 @@ export type Settings = {
   logo: string | null
   description: string | null
   social: SocialLinks
+}
+
+export type Hero = {
+  id: number
+  title: string
+  description: string
+  content: string
+  button_1_name: string
+  button_2_name: string
+  video: string | null
 }
 
 export type About = {
