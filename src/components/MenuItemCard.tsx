@@ -153,7 +153,7 @@ export function MenuItemCard({
               {weightOptions.map((option) => (
                 <div
                   key={option.id}
-                  className="relative overflow-hidden rounded-xl border border-tant-gold/20 bg-linear-to-br from-tant-green-deep/55 to-tant-green/25 shadow-inner shadow-black/10 transition-[border-color,transform] duration-200 hover:-translate-y-px hover:border-tant-gold/45"
+                  className="relative overflow-hidden rounded-xl border border-tant-gold/20 bg-linear-to-br from-tant-green-deep/55 to-tant-green/25 shadow-inner shadow-black/10 transition-[border-color,transform] duration-200 hover:border-tant-gold/45"
                 >
                   <div className="flex min-h-10 items-stretch">
                     <div className="flex flex-1 items-center justify-center px-2 py-2">

@@ -2,15 +2,10 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { motion, useMotionValue, useTransform } from "motion/react"
 import type { PanInfo } from "motion/react"
 import type { JSX } from "react"
-import { Star } from "lucide-react"
+import { TestimonialCard } from "@/components/TestimonialCard"
+import type { Testimonial } from "@/types/api"
 
-export interface CarouselItem {
-    title: string
-    description: string
-    id: number
-    icon: React.ReactNode
-    rating?: number
-}
+export type CarouselItem = Testimonial
 
 export interface CarouselProps {
     items?: CarouselItem[]
@@ -66,39 +61,24 @@ function CarouselItem({
     return (
         <motion.div
             key={`${item?.id ?? index}-${index}`}
-            className={`relative flex shrink-0 flex-col overflow-hidden ${
+            className={`relative shrink-0 cursor-grab active:cursor-grabbing ${
                 round
-                    ? "cursor-grab items-center justify-center border-0 bg-tant-green-deep text-center active:cursor-grabbing"
-                    : "glass-panel cursor-grab items-center justify-center rounded-2xl border border-tant-gold/20 px-6 py-8 text-center active:cursor-grabbing sm:px-8 sm:py-10"
+                    ? "flex flex-col items-center justify-center overflow-hidden border-0 bg-tant-green-deep text-center"
+                    : ""
             }`}
             style={{
                 width: itemWidth,
-                height: round ? itemWidth : "auto",
-                minHeight: round ? undefined : 220,
+                height: round ? itemWidth : undefined,
                 rotateY: round ? rotateY : 0,
                 ...(round && { borderRadius: "50%" }),
             }}
             transition={transition}
         >
-            <div className="flex flex-col items-center">
-                <span className="mb-5 flex size-16 items-center justify-center rounded-full border border-tant-gold/40 bg-tant-green-deep font-display text-xl text-tant-gold">
-                    {item.icon}
-                </span>
-                <p className="font-display text-lg leading-relaxed text-tant-cream italic md:text-xl">
-                    {item.description}
-                </p>
-                <p className="mt-4 text-sm text-tant-gold">{item.title}</p>
-                {item.rating != null && item.rating > 0 && (
-                    <div className="mt-3 flex justify-center gap-1">
-                        {Array.from({ length: item.rating }).map((_, i) => (
-                            <Star
-                                key={i}
-                                className="size-4 fill-tant-gold text-tant-gold"
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
+            {round ? (
+                <span className="font-display text-xl text-tant-gold">{item.name.charAt(0)}</span>
+            ) : (
+                <TestimonialCard testimonial={item} />
+            )}
         </motion.div>
     )
 }
@@ -279,7 +259,7 @@ export default function Carousel({
         <div
             ref={containerRef}
             className={`relative mx-auto w-full overflow-hidden p-4 ${
-                round ? "rounded-full border border-tant-gold/40" : "min-h-[260px]"
+                round ? "rounded-full border border-tant-gold/40" : "min-h-[520px]"
             } ${className}`}
             style={{
                 maxWidth: `${baseWidth}px`,

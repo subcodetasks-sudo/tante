@@ -4,11 +4,11 @@ import { AnimatePresence, motion, useScroll, useTransform } from "motion/react"
 import { MapPin } from "lucide-react"
 import { ScrollAnimationWrapper } from "@/components/ScrollAnimationWrapper"
 import SpecularButton from "@/components/SpecularButton"
-import Carousel from "@/components/Carousel"
+import { Marquee } from "@/components/ui/marquee"
+import { TestimonialCard, TestimonialCardSkeleton } from "@/components/TestimonialCard"
 import { MenuItemCard, MenuItemCardSkeleton } from "@/components/MenuItemCard"
 import { useMenuStore } from "@/store/menuStore"
 import { useSiteStore } from "@/store/siteStore"
-import { Skeleton } from "@/components/ui/skeleton"
 
 const heroEase = [0.22, 1, 0.36, 1] as const
 
@@ -47,7 +47,10 @@ export default function LandingPage() {
     const mostOrdered = useMenuStore((s) => s.mostOrdered)
     const mostOrderedStatus = useMenuStore((s) => s.mostOrderedStatus)
     const fetchMostOrdered = useMenuStore((s) => s.fetchMostOrdered)
+    const settings = useSiteStore((s) => s.settings)
+    const hero = useSiteStore((s) => s.hero)
     const about = useSiteStore((s) => s.about)
+    const branchContent = useSiteStore((s) => s.branchContent)
     const branches = useSiteStore((s) => s.branches)
     const testimonials = useSiteStore((s) => s.testimonials)
     const siteStatus = useSiteStore((s) => s.status)
@@ -68,17 +71,7 @@ export default function LandingPage() {
         [mostOrdered],
     )
 
-    const testimonialItems = useMemo(
-        () =>
-            testimonials.map((t) => ({
-                id: t.id,
-                title: t.name,
-                description: `«${t.review}»`,
-                icon: t.name.charAt(0),
-                rating: t.rating,
-            })),
-        [testimonials],
-    )
+    const testimonialItems = useMemo(() => testimonials, [testimonials])
 
     useEffect(() => {
         if (!location.hash) return
@@ -114,7 +107,10 @@ export default function LandingPage() {
 
     return (
         <>
-            <title>طنط — طعم الأصالة</title>
+            <title>
+                {settings?.restaurant_name ?? "طنط"}
+                {hero?.title ? ` — ${hero.title}` : " — طعم الأصالة"}
+            </title>
             {/* Hero — expands to full-bleed as it scrolls with the page */}
             <section
                 ref={heroRef}
@@ -137,12 +133,12 @@ export default function LandingPage() {
                         className="relative flex h-full w-full items-center justify-center overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.35)]"
                     >
                         <video
-                            src="/hero-video.mp4"
+                            src={hero?.video ?? "/hero-video.mp4"}
                             autoPlay
                             muted
                             loop
                             playsInline
-                            aria-label="المشاوي من عمائلي — طعمها غير"
+                            aria-label={hero?.title ?? "طعم الأصالة"}
                             className="absolute inset-0 size-full object-cover"
                             preload="auto"
                         />
@@ -159,23 +155,31 @@ export default function LandingPage() {
                         >
                             <motion.p
                                 variants={heroTextItem}
-                                className="font-display text-sm tracking-[0.2em] text-tant-gold/80 uppercase"
+                                className="font-display text-xl tracking-[0.15em] text-tant-gold/80 uppercase md:text-2xl lg:text-3xl"
                             >
-                                طنط
+                                {settings?.restaurant_name ?? "طنط"}
                             </motion.p>
                             <motion.h1
                                 variants={heroTextItem}
                                 className="font-arabic text-5xl leading-tight text-tant-gold drop-shadow-sm md:text-6xl lg:text-7xl"
                             >
-                                طعم الأصالة
+                                {hero?.title ?? "طعم الأصالة"}
                             </motion.h1>
                             <motion.p
                                 variants={heroTextItem}
                                 className="mx-auto max-w-md text-base leading-relaxed text-tant-cream/90 md:text-lg"
                             >
-                                نكهات الشارع العربي الأصيل، بأناقة وعناية — من شاورما الفحم
-                                إلى بهارات التراث المتوارثة جيلاً بعد جيل.
+                                {hero?.description ??
+                                    "نكهات الشارع العربي الأصيل، بأناقة وعناية — من شاورما الفحم إلى بهارات التراث المتوارثة جيلاً بعد جيل."}
                             </motion.p>
+                            {hero?.content ? (
+                                <motion.p
+                                    variants={heroTextItem}
+                                    className="mx-auto max-w-lg text-sm leading-relaxed text-tant-cream/75 md:text-base"
+                                >
+                                    {hero.content}
+                                </motion.p>
+                            ) : null}
                             <motion.div
                                 variants={heroTextItem}
                                 className="mt-4 flex flex-wrap items-center justify-center gap-3"
@@ -200,7 +204,7 @@ export default function LandingPage() {
                                     onClick={() => navigate("/menu", { viewTransition: true })}
                                     className="font-sans text-sm md:text-base"
                                 >
-                                    عرض القائمة
+                                    {hero?.button_1_name ?? "عرض القائمة"}
                                 </SpecularButton>
                                 <SpecularButton
                                     size="md"
@@ -222,7 +226,7 @@ export default function LandingPage() {
                                     onClick={() => navigate("/menu", { viewTransition: true })}
                                     className="font-sans text-sm shadow-none md:text-base"
                                 >
-                                    اطلب الآن
+                                    {hero?.button_2_name ?? "اطلب الآن"}
                                 </SpecularButton>
                             </motion.div>
                         </motion.div>
@@ -258,8 +262,8 @@ export default function LandingPage() {
                                     src="/bowel-of-molokheya.png"
                                     alt="Bowl of Molokheya"
                                     className="h-32 w-32 rotate-6 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] sm:h-36 sm:w-36 md:h-44 md:w-44"
-																		fetchPriority="high"
-																		loading="eager"
+                                    fetchPriority="high"
+                                    loading="eager"
                                 />
                             </motion.div>
                         </ScrollAnimationWrapper>
@@ -270,7 +274,7 @@ export default function LandingPage() {
                                     {about?.title ?? "من نحن"}
                                 </h2>
                                 <p className="font-arabic text-2xl leading-relaxed text-tant-gold-soft md:text-3xl">
-                                    «{about?.description ?? "من الموقد إلى المائدة، نكرّم مذاق الأصالة"}»
+                                    {about?.description ?? "من الموقد إلى المائدة، نكرّم مذاق الأصالة"}
                                 </p>
                                 <p className="whitespace-pre-line text-base leading-relaxed text-tant-cream/80 md:text-lg">
                                     {about?.content ??
@@ -288,8 +292,8 @@ export default function LandingPage() {
                                     src="/bowel-of-meat.png"
                                     alt="Bowl of Meat"
                                     className="h-36 w-36 -rotate-6 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] sm:h-40 sm:w-40 md:h-48 md:w-48"
-																		fetchPriority="high"
-																		loading="eager"
+                                    fetchPriority="high"
+                                    loading="eager"
                                 />
                             </motion.div>
                         </ScrollAnimationWrapper>
@@ -380,10 +384,11 @@ export default function LandingPage() {
                 >
                     <ScrollAnimationWrapper type="blur-fade" className="text-center">
                         <h2 className="font-display text-3xl text-tant-gold md:text-4xl">
-                            الفروع
+                            {branchContent?.title ?? "الفروع"}
                         </h2>
                         <p className="mt-2 text-tant-muted">
-                            زورونا في أنحاء المملكة.
+                            {branchContent?.description ??
+                                "زورونا في أنحاء المملكة."}
                         </p>
                     </ScrollAnimationWrapper>
 
@@ -427,7 +432,7 @@ export default function LandingPage() {
                         </h2>
                     </ScrollAnimationWrapper>
 
-                    <ScrollAnimationWrapper type="zoom-in" className="mx-auto w-full max-w-xl px-2">
+                    <ScrollAnimationWrapper type="zoom-in" className="w-full">
                         <AnimatePresence mode="wait">
                             {siteStatus === "loading" && testimonialItems.length === 0 ? (
                                 <motion.div
@@ -436,17 +441,11 @@ export default function LandingPage() {
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.3 }}
-                                    className="glass-panel flex flex-col items-center justify-center rounded-2xl border border-tant-gold/20 px-6 py-8 text-center sm:px-8 sm:py-10 min-h-[220px]"
+                                    className="flex justify-center gap-4 overflow-hidden py-8"
                                 >
-                                    <Skeleton className="size-16 rounded-full" />
-                                    <Skeleton className="mt-5 h-4 w-5/6 rounded-lg" />
-                                    <Skeleton className="mt-2 h-4 w-2/3 rounded-lg" />
-                                    <Skeleton className="mt-4 h-4 w-24 rounded-lg" />
-                                    <div className="mt-3 flex gap-1">
-                                        {Array.from({ length: 5 }).map((_, i) => (
-                                            <Skeleton key={i} className="size-4 rounded-full" />
-                                        ))}
-                                    </div>
+                                    {Array.from({ length: 3 }).map((_, index) => (
+                                        <TestimonialCardSkeleton key={index} className="w-[250px] sm:w-[280px] md:w-[320px] max-w-[80vw] shrink-0" />
+                                    ))}
                                 </motion.div>
                             ) : testimonialItems.length > 0 ? (
                                 <motion.div
@@ -455,16 +454,17 @@ export default function LandingPage() {
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.3 }}
+                                    className="relative w-full py-8 overflow-hidden rounded-3xl"
                                 >
-                                    <Carousel
-                                        items={testimonialItems}
-                                        baseWidth={576}
-                                        autoplay
-                                        autoplayDelay={5000}
-                                        pauseOnHover
-                                        loop
-                                        round={false}
-                                    />
+                                    <Marquee pauseOnHover repeat={12} className="py-6 [--duration:35s] [--gap:1rem] sm:[--gap:1.5rem] rounded-3xl overflow-hidden">
+                                        {testimonialItems.map((item) => (
+                                            <TestimonialCard
+                                                key={item.id}
+                                                testimonial={item}
+                                                className="w-[250px] sm:w-[280px] md:w-[320px] max-w-[80vw] shrink-0"
+                                            />
+                                        ))}
+                                    </Marquee>
                                 </motion.div>
                             ) : (
                                 <motion.p
