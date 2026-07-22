@@ -138,9 +138,11 @@ export function MenuItemCard({
               draggable={false}
             />
           ) : (
-            <span className="px-4 text-center font-display text-sm tracking-wider text-tant-gold/80">
-              {item.name_ar}
-            </span>
+            <SiteLogo
+              src={logoSrc}
+              alt={item.name_ar}
+              className="size-24 rounded-full object-contain opacity-70"
+            />
           )}
           <div className="absolute inset-e-2 top-2 z-10">
             <TooltipProvider>
@@ -179,7 +181,7 @@ export function MenuItemCard({
             <SiteLogo
               src={logoSrc}
               alt=""
-              className="pointer-events-none absolute inset-s-2 bottom-2 z-10 size-10 rounded-lg object-cover opacity-50"
+              className="pointer-events-none absolute inset-s-2 bottom-2 z-10 size-10 rounded-full object-cover opacity-50"
             />
           ) : null}
         </div>

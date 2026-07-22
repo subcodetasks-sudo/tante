@@ -257,6 +257,30 @@ p {
   animation-duration: 220ms;
 }
 
+html.boot-view-transition::view-transition-old(root) {
+  animation: boot-vt-out 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+html.boot-view-transition::view-transition-new(root) {
+  animation: boot-vt-in 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes boot-vt-out {
+  to {
+    opacity: 0;
+    filter: blur(10px);
+    transform: scale(1.03);
+  }
+}
+
+@keyframes boot-vt-in {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+    transform: scale(0.985);
+  }
+}
+
 ::view-transition-group(site-header) {
   overflow: clip;
   border-radius: 1.25rem;

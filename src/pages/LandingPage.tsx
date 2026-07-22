@@ -142,12 +142,10 @@ export default function LandingPage() {
     const branches = useSiteStore((s) => s.branches)
     const testimonials = useSiteStore((s) => s.testimonials)
     const siteStatus = useSiteStore((s) => s.status)
-    const fetchSite = useSiteStore((s) => s.fetchAll)
 
     useEffect(() => {
         void fetchMostOrdered()
-        void fetchSite()
-    }, [fetchMostOrdered, fetchSite])
+    }, [fetchMostOrdered])
 
     const featuredItems = useMemo(
         () =>

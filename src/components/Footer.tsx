@@ -69,8 +69,22 @@ export function Footer() {
     },
   ].filter((link) => Boolean(link.href))
 
+  const renderSocialIcons = () =>
+    socialLinks.map(({ href, label, icon: Icon }) => (
+      <a
+        key={label}
+        href={href!}
+        target="_blank"
+        rel="noreferrer"
+        className="text-tant-cream/80 transition-colors hover:text-tant-gold"
+        aria-label={label}
+      >
+        <Icon className="size-5" />
+      </a>
+    ))
+
   return (
-    <footer className="mt-auto border-t border-tant-gold/25 px-4 py-12 md:px-8">
+    <footer className="relative mt-auto border-t border-tant-gold/25 px-4 py-12 md:px-8">
       <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-3">
         <div className="space-y-4">
           <Link to="/" viewTransition={true} aria-label="الصفحة الرئيسية — تنت">
@@ -121,28 +135,24 @@ export function Footer() {
             </ul>
           </div>
           {socialLinks.length > 0 && (
-            <div className="flex flex-wrap items-center gap-4 pt-2">
-              {socialLinks.map(({ href, label, icon: Icon }) => (
-                <a
-                  key={label}
-                  href={href!}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-2 text-sm text-tant-cream/80 transition-colors hover:text-tant-gold"
-                  aria-label={label}
-                >
-                  <Icon className="size-5" />
-                </a>
-              ))}
+            <div className="hidden flex-row items-center gap-4 md:flex">
+              {renderSocialIcons()}
             </div>
           )}
         </div>
       </div>
 
-      <p className="mx-auto mt-10 max-w-6xl text-center text-xs text-tant-muted md:text-start">
-        © جميع الحقوق محفوظة {new Date().getFullYear()}{" "}
-        {settings?.restaurant_name ?? "تنت"}.
-      </p>
+      <div className="relative mx-auto max-w-6xl pt-10">
+        {socialLinks.length > 0 && (
+          <div className="absolute bottom-full left-4 mb-4 flex flex-col gap-4 md:hidden">
+            {renderSocialIcons()}
+          </div>
+        )}
+        <p className="flex items-center justify-center text-center text-xs text-tant-muted md:text-start">
+          © جميع الحقوق محفوظة {new Date().getFullYear()}{" "}
+          {settings?.restaurant_name ?? "تنت"}.
+        </p>
+      </div>
     </footer>
   )
 }
