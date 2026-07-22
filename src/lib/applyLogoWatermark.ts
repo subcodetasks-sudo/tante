@@ -1,4 +1,4 @@
-import watermark from "watermarkjs"
+import watermarkImport from "watermarkjs"
 import { DEFAULT_LOGO } from "@/components/SiteLogo"
 
 const MARK_ALPHA = 0.55
@@ -8,9 +8,26 @@ const MARK_RADIUS_RATIO = 0.22
 
 const cache = new Map<string, Promise<string>>()
 
+type WatermarkFactory = typeof watermarkImport
+
+/** UMD interop: Vite may expose the factory on `.default`. */
+function getWatermark(): WatermarkFactory {
+  const candidate = watermarkImport as WatermarkFactory & {
+    default?: WatermarkFactory
+  }
+  const factory = candidate?.default ?? candidate
+  if (typeof factory !== "function") {
+    throw new Error("watermarkjs failed to load")
+  }
+  return factory
+}
+
 /**
  * Rewrite API-hosted media to a same-origin path so canvas watermarking
- * is not blocked by missing CORS headers (dev uses the Vite /storage proxy).
+ * is not blocked by missing CORS headers.
+ *
+ * Dev: Vite proxies `/storage` → PUBLIC_BASE_URL
+ * Prod: Vercel rewrites `/storage` → PUBLIC_BASE_URL (see vercel.json)
  */
 export function toCanvasSafeUrl(src: string): string {
   if (
@@ -22,21 +39,30 @@ export function toCanvasSafeUrl(src: string): string {
     return src
   }
 
-  const base = (import.meta.env.PUBLIC_BASE_URL ?? "").replace(/\/$/, "")
-  if (!base) return src
-
   try {
     const url = new URL(src)
+    const pathWithQuery = `${url.pathname}${url.search}`
+
+    // Prefer rewriting `/storage/*` whenever the page is cross-origin,
+    // even if PUBLIC_BASE_URL is missing from the build env.
+    if (url.pathname.startsWith("/storage")) {
+      if (typeof window === "undefined") return pathWithQuery
+      if (window.location.origin === url.origin) return src
+      return pathWithQuery
+    }
+
+    const base = (import.meta.env.PUBLIC_BASE_URL ?? "").replace(/\/$/, "")
+    if (!base) return src
+
     const apiOrigin = new URL(base).origin
     if (url.origin !== apiOrigin) return src
 
-    const pathWithQuery = `${url.pathname}${url.search}`
     if (typeof window === "undefined") return pathWithQuery
 
     // Same origin as the API: keep the absolute URL.
     if (window.location.origin === apiOrigin) return src
 
-    // Cross-origin app (e.g. localhost): use proxied relative path.
+    // Cross-origin app: use proxied relative path.
     return pathWithQuery
   } catch {
     return src
@@ -126,6 +152,7 @@ async function createWatermarkedDataUrl(
     resolveLogoImage(logoSrc),
   ])
 
+  const watermark = getWatermark()
   const result = (await watermark([photo, logo]).image(
     drawRoundedLogoWatermark,
   )) as HTMLImageElement
