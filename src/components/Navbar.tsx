@@ -2,13 +2,15 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react"
-import { Link, NavLink, useLocation } from "react-router-dom"
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom"
 import { FaWhatsapp } from "react-icons/fa"
 import { gsap } from "gsap"
-import { Heart } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
+import { Heart, Search, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   Tooltip,
@@ -16,8 +18,33 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useMenuStore } from "@/store/menuStore"
 import { useSiteStore } from "@/store/siteStore"
 import { SiteLogo } from "@/components/SiteLogo"
+import type { Product } from "@/types/api"
+
+type SearchHit = {
+  product: Product
+  categoryId: number
+  categoryName: string
+}
+
+function normalizeSearch(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, " ")
+}
+
+function productMatchesQuery(product: Product, query: string) {
+  if (!query) return false
+  const nameAr = normalizeSearch(product.name_ar ?? "")
+  const nameEn = normalizeSearch(product.name_en ?? "")
+  return nameAr.includes(query) || nameEn.includes(query)
+}
+
+function productPriceLabel(product: Product) {
+  if (product.price != null) return `${product.price} ر.س`
+  const priced = (product.weights ?? []).find((w) => w.price != null)
+  return priced ? `${priced.price} ر.س` : null
+}
 
 const sectionLinks = [
   { label: "الرئيسية", hash: "home" },
@@ -36,10 +63,10 @@ function sectionHref(hash: string) {
 }
 
 const linkBase =
-  "site-header__link font-display text-sm tracking-wide md:text-base"
+  "site-header__link font-display text-sm tracking-wide nav:text-base"
 
 const contactCtaBase =
-  "site-header__cta font-display text-sm tracking-wide md:text-base"
+  "site-header__cta font-display text-sm tracking-wide nav:text-base"
 
 const mobileCtaBase =
   "site-header__mobile-cta font-display text-base tracking-wide"
@@ -50,7 +77,7 @@ const mobileLinkBase =
 const MENU_EASE = "power3.out"
 const MENU_DURATION = 0.26
 const MENU_STAGGER = 0.04
-const MOBILE_MQ = "(max-width: 767px)"
+const MOBILE_MQ = "(max-width: 881px)"
 
 function whatsappHrefFromSettings(whatsapp: string | null | undefined) {
   if (!whatsapp) return "https://wa.me/"
@@ -94,16 +121,26 @@ function blurNavLink(e: React.PointerEvent<HTMLAnchorElement>) {
 
 export function Navbar() {
   const location = useLocation()
+  const navigate = useNavigate()
   const onHome = location.pathname === "/"
   const settings = useSiteStore((s) => s.settings)
   const whatsappHref = whatsappHrefFromSettings(settings?.social.whatsapp)
+  const categories = useMenuStore((s) => s.categories)
+  const menuStatus = useMenuStore((s) => s.status)
+  const fetchMenu = useMenuStore((s) => s.fetchMenu)
   const glassRef = useRef<HTMLDivElement | null>(null)
   const barRef = useRef<HTMLDivElement | null>(null)
+  const shellRef = useRef<HTMLElement | null>(null)
   const mobileMenuRef = useRef<HTMLUListElement | null>(null)
   const tlRef = useRef<gsap.core.Timeline | null>(null)
+  const searchPanelRef = useRef<HTMLDivElement | null>(null)
+  const searchInputRef = useRef<HTMLInputElement | null>(null)
+  const searchToggleRef = useRef<HTMLSpanElement | null>(null)
 
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
   const [activeSection, setActiveSection] = useState<string>("home")
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined" ? isMobileViewport() : false,
@@ -307,11 +344,32 @@ export function Navbar() {
     tl.reverse()
   }, [isExpanded])
 
+  const closeSearch = useCallback(() => {
+    setIsSearchOpen(false)
+  }, [])
+
+  const openSearch = useCallback(() => {
+    closeMenu()
+    setSearchQuery("")
+    setIsSearchOpen(true)
+    void fetchMenu()
+  }, [closeMenu, fetchMenu])
+
+  const toggleSearch = () => {
+    if (isSearchOpen) {
+      closeSearch()
+      return
+    }
+    openSearch()
+  }
+
   const toggleMenu = () => {
     if (!isMobileViewport()) return
 
     const glassEl = glassRef.current
     if (!glassEl) return
+
+    if (isSearchOpen) closeSearch()
 
     const tl = tlRef.current ?? createTimeline()
     if (!tl) return
@@ -329,10 +387,94 @@ export function Navbar() {
     closeMenu()
   }
 
+  const normalizedQuery = normalizeSearch(searchQuery)
+
+  const searchHits = useMemo((): SearchHit[] => {
+    if (!normalizedQuery) return []
+
+    const hits: SearchHit[] = []
+    for (const category of categories) {
+      for (const product of category.products ?? []) {
+        if (!productMatchesQuery(product, normalizedQuery)) continue
+        hits.push({
+          product,
+          categoryId: category.id,
+          categoryName: category.name_ar,
+        })
+        if (hits.length >= 8) return hits
+      }
+    }
+    return hits
+  }, [categories, normalizedQuery])
+
+  const selectSearchHit = useCallback(
+    (hit: SearchHit) => {
+      closeSearch()
+      closeMenu()
+      navigate(
+        `/menu?category=${hit.categoryId}&product=${hit.product.id}`,
+        { viewTransition: true },
+      )
+    },
+    [closeMenu, closeSearch, navigate],
+  )
+
   useEffect(() => {
-    closeMenu()
+    const frame = window.requestAnimationFrame(() => {
+      closeMenu()
+      closeSearch()
+    })
+    return () => window.cancelAnimationFrame(frame)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- close on route change only
   }, [location.pathname, location.hash])
+
+  useEffect(() => {
+    if (!isSearchOpen) return
+    const frame = window.requestAnimationFrame(() => {
+      searchInputRef.current?.focus()
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [isSearchOpen])
+
+  useLayoutEffect(() => {
+    const shell = shellRef.current
+    const header = shell?.closest(".site-header") as HTMLElement | null
+    if (!header || !shell) return
+
+    const syncSearchTop = () => {
+      const shellBottom = shell.getBoundingClientRect().bottom
+      header.style.setProperty(
+        "--site-search-top",
+        `${Math.max(shellBottom + 8, 0)}px`,
+      )
+    }
+
+    syncSearchTop()
+    window.addEventListener("resize", syncSearchTop)
+    return () => window.removeEventListener("resize", syncSearchTop)
+  }, [isSearchOpen, isExpanded])
+
+  useEffect(() => {
+    if (!isSearchOpen) return
+
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node
+      if (searchPanelRef.current?.contains(target)) return
+      if (searchToggleRef.current?.contains(target)) return
+      closeSearch()
+    }
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeSearch()
+    }
+
+    document.addEventListener("pointerdown", onPointerDown)
+    document.addEventListener("keydown", onKeyDown)
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown)
+      document.removeEventListener("keydown", onKeyDown)
+    }
+  }, [isSearchOpen, closeSearch])
 
   useEffect(() => {
     if (!isExpanded) return
@@ -352,8 +494,9 @@ export function Navbar() {
   }, [isExpanded, closeMenu])
 
   return (
-    <header className="site-header fixed inset-x-0 top-0 z-50 px-4 pt-5 md:px-8 md:pt-6">
+    <header className="site-header fixed inset-x-0 top-0 z-50 px-4 pt-5 nav:px-8 nav:pt-6">
       <nav
+        ref={shellRef}
         className="site-header__shell relative mx-auto max-w-6xl"
         aria-label="القائمة الرئيسية"
       >
@@ -366,7 +509,7 @@ export function Navbar() {
         >
           <div
             ref={barRef}
-            className="site-header__bar grid w-full grid-cols-[1fr_auto] items-center gap-2 md:grid-cols-[1fr_auto_1fr]"
+            className="site-header__bar grid w-full grid-cols-[1fr_auto] items-center gap-2 nav:grid-cols-[1fr_auto_1fr]"
           >
             <Link
               to="/"
@@ -379,11 +522,11 @@ export function Navbar() {
               <SiteLogo
                 src={settings?.logo}
                 alt={settings?.restaurant_name ?? "تنت"}
-                className="site-header__logo h-10 w-10 object-contain md:h-11 md:w-11"
+                className="site-header__logo h-10 w-10 object-contain nav:h-11 nav:w-11"
               />
             </Link>
 
-            <ul className="hidden items-center justify-center gap-1 md:col-start-2 md:flex md:gap-1.5">
+            <ul className="hidden items-center justify-center gap-1 nav:col-start-2 nav:flex nav:gap-1.5">
               {sectionLinks.map((link) => {
                 if ("to" in link) {
                   return (
@@ -427,7 +570,51 @@ export function Navbar() {
               })}
             </ul>
 
-            <div className="site-header__actions flex items-center justify-self-end gap-1 md:col-start-3 md:gap-1.5">
+            <div className="site-header__actions flex items-center justify-self-end gap-1 nav:col-start-3 nav:gap-1.5">
+              <span ref={searchToggleRef} className="inline-flex">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger
+                      delay={300}
+                      render={(props) => (
+                        <button
+                          {...props}
+                          type="button"
+                          onClick={(event) => {
+                            props.onClick?.(event)
+                            toggleSearch()
+                          }}
+                          aria-label={
+                            isSearchOpen ? "إغلاق البحث" : "بحث في القائمة"
+                          }
+                          aria-expanded={isSearchOpen}
+                          aria-controls="site-menu-search"
+                          className={cn(
+                            props.className,
+                            "site-header__fav inline-flex size-10 shrink-0 items-center justify-center nav:size-11",
+                            isSearchOpen && "site-header__fav--active",
+                          )}
+                        />
+                      )}
+                    >
+                      {isSearchOpen ? (
+                        <X
+                          className="size-5 text-tant-gold"
+                          strokeWidth={1.75}
+                        />
+                      ) : (
+                        <Search
+                          className="size-5 text-tant-gold"
+                          strokeWidth={1.75}
+                        />
+                      )}
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      {isSearchOpen ? "إغلاق البحث" : "بحث"}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </span>
 
               <TooltipProvider>
                 <Tooltip>
@@ -444,7 +631,7 @@ export function Navbar() {
                         className={({ isActive }) =>
                           cn(
                             props.className,
-                            "site-header__fav inline-flex size-10 shrink-0 items-center justify-center md:size-11",
+                            "site-header__fav inline-flex size-10 shrink-0 items-center justify-center nav:size-11",
                             isActive && "site-header__fav--active",
                           )
                         }
@@ -558,6 +745,101 @@ export function Navbar() {
             </li>
           </ul>
         </div>
+
+        <AnimatePresence
+          onExitComplete={() => {
+            setSearchQuery("")
+          }}
+        >
+          {isSearchOpen ? (
+            <motion.div
+              ref={searchPanelRef}
+              id="site-menu-search"
+              className="site-header__search"
+              initial={{ opacity: 0, y: -10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.98 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              aria-hidden={false}
+            >
+              <label className="site-header__search-field">
+                <Search
+                  className="site-header__search-icon size-4 shrink-0"
+                  strokeWidth={1.75}
+                  aria-hidden
+                />
+                <input
+                  ref={searchInputRef}
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="ابحث عن منتج في القائمة..."
+                  autoComplete="off"
+                  enterKeyHint="search"
+                  aria-label="ابحث عن منتج في القائمة"
+                  className="site-header__search-input"
+                />
+                {searchQuery ? (
+                  <button
+                    type="button"
+                    className="site-header__search-clear"
+                    aria-label="مسح البحث"
+                    onClick={() => {
+                      setSearchQuery("")
+                      searchInputRef.current?.focus()
+                    }}
+                  >
+                    <X className="size-4" strokeWidth={1.75} aria-hidden />
+                  </button>
+                ) : null}
+              </label>
+
+              {normalizedQuery ? (
+                <div className="site-header__search-results" role="listbox">
+                  {menuStatus === "loading" && categories.length === 0 ? (
+                    <p className="site-header__search-empty">
+                      جاري تحميل القائمة...
+                    </p>
+                  ) : searchHits.length > 0 ? (
+                    <ul className="site-header__search-list">
+                      {searchHits.map((hit) => {
+                        const price = productPriceLabel(hit.product)
+                        return (
+                          <li key={hit.product.id}>
+                            <button
+                              type="button"
+                              role="option"
+                              className="site-header__search-hit"
+                              onClick={() => selectSearchHit(hit)}
+                            >
+                              <span className="site-header__search-hit-copy">
+                                <span className="site-header__search-hit-name">
+                                  {hit.product.name_ar}
+                                </span>
+                                <span className="site-header__search-hit-meta">
+                                  {hit.categoryName}
+                                </span>
+                              </span>
+                              {price ? (
+                                <span className="site-header__search-hit-price">
+                                  {price}
+                                </span>
+                              ) : null}
+                            </button>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  ) : (
+                    <p className="site-header__search-empty">
+                      لا توجد نتائج لـ «{searchQuery.trim()}»
+                    </p>
+                  )}
+                </div>
+              ) : null}
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
       </nav>
     </header>
   )

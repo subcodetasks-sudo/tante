@@ -1,12 +1,14 @@
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { applyLogoWatermark } from "@/lib/applyLogoWatermark"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { SiteLogo } from "@/components/SiteLogo"
+import { DEFAULT_LOGO, SiteLogo } from "@/components/SiteLogo"
 import { useFavoritesStore } from "@/store/favoritesStore"
 import { useSiteStore } from "@/store/siteStore"
 import type { Product, ProductWeight } from "@/types/api"
@@ -31,6 +33,52 @@ export function MenuItemCard({
   const isFavorite = useFavoritesStore((s) => s.isFavorite(item.id))
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite)
   const settings = useSiteStore((s) => s.settings)
+  const logoSrc = settings?.logo?.trim() || DEFAULT_LOGO
+  const [watermarkedImage, setWatermarkedImage] = useState<{
+    source: string
+    result: string
+    embedded: boolean
+  } | null>(null)
+
+  useEffect(() => {
+    if (!item.image) return
+
+    let cancelled = false
+
+    applyLogoWatermark(item.image, logoSrc)
+      .then((src) => {
+        if (!cancelled) {
+          setWatermarkedImage({
+            source: item.image!,
+            result: src,
+            embedded: true,
+          })
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setWatermarkedImage({
+            source: item.image!,
+            result: item.image!,
+            embedded: false,
+          })
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [item.image, logoSrc])
+
+  const displayImage =
+    item.image && watermarkedImage?.source === item.image
+      ? watermarkedImage.result
+      : item.image
+
+  const showOverlayLogo =
+    Boolean(item.image) &&
+    watermarkedImage?.source === item.image &&
+    !watermarkedImage.embedded
 
   const favoriteLabel = isFavorite
     ? "إزالة من المفضلة"
@@ -74,6 +122,7 @@ export function MenuItemCard({
 
   return (
     <article
+      id={`menu-item-${item.id}`}
       className={cn(
         "glass-panel group flex flex-col overflow-hidden rounded-2xl border border-tant-gold/25 shadow-md shadow-black/20 transition-shadow hover:shadow-lg hover:shadow-black/30",
         className,
@@ -81,9 +130,9 @@ export function MenuItemCard({
     >
       <div className="p-1">
         <div className="relative flex aspect-4/3 w-full items-center justify-center overflow-hidden rounded-t-2xl bg-linear-to-b from-tant-green/35 to-tant-green-deep/65">
-          {item.image ? (
+          {displayImage ? (
             <img
-              src={item.image}
+              src={displayImage}
               alt={item.name_ar}
               className="size-full object-cover"
               draggable={false}
@@ -126,11 +175,13 @@ export function MenuItemCard({
               </Tooltip>
             </TooltipProvider>
           </div>
-          <SiteLogo
-            src={settings?.logo}
-            alt=""
-            className="pointer-events-none absolute inset-s-2 bottom-2 z-10 size-10 rounded-full object-cover opacity-50"
-          />
+          {showOverlayLogo ? (
+            <SiteLogo
+              src={logoSrc}
+              alt=""
+              className="pointer-events-none absolute inset-s-2 bottom-2 z-10 size-10 rounded-lg object-cover opacity-50"
+            />
+          ) : null}
         </div>
 
         {resolvedCategory ? (
@@ -142,7 +193,7 @@ export function MenuItemCard({
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 px-4 py-3">
+      <div className="flex flex-1 justify-end flex-col gap-2 px-4 py-3">
         <h3 className="min-w-0 truncate font-display text-base text-tant-cream">
           {item.name_ar}
         </h3>
@@ -171,7 +222,7 @@ export function MenuItemCard({
                       </span>
                     </div>
                     <div className="flex flex-1 items-center justify-center border-s border-tant-gold/15 bg-tant-green-deep/25 px-2 py-2">
-                      <span className="text-xs font-semibold leading-none text-tant-cream">
+                      <span className="text-sm font-semibold leading-none text-tant-cream">
                         {option.price} ر.س
                       </span>
                     </div>
@@ -190,7 +241,7 @@ export function MenuItemCard({
             </div>
           </div>
         ) : (
-          <div className="mt-auto flex items-center justify-between gap-3">
+          <div className=" flex items-center justify-between gap-3">
             {item.calories != null && item.calories !== "" ? (
               <span className="inline-flex items-center gap-1 text-xs text-tant-muted">
                 <Flame
@@ -203,7 +254,7 @@ export function MenuItemCard({
               <span />
             )}
             {item.price != null ? (
-              <span className="shrink-0 text-sm font-medium text-tant-gold-bright">
+              <span className="shrink-0 text-base font-medium text-tant-gold-bright">
                 {item.price} ر.س
               </span>
             ) : null}

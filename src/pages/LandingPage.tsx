@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { AnimatePresence, motion, useScroll, useTransform } from "motion/react"
 import { MapPin } from "lucide-react"
@@ -10,6 +10,92 @@ import { TestimonialCard, TestimonialCardSkeleton } from "@/components/Testimoni
 import { MenuItemCard, MenuItemCardSkeleton } from "@/components/MenuItemCard"
 import { useMenuStore } from "@/store/menuStore"
 import { useSiteStore } from "@/store/siteStore"
+
+const ABOUT_MEDIA_CROSSFADE_MS = 7000
+const ABOUT_MEDIA_FADE_DURATION = 1.1
+
+function AboutMedia({
+    image,
+    video,
+    title,
+}: {
+    image?: string | null
+    video?: string | null
+    title: string
+}) {
+    const hasImage = Boolean(image)
+    const hasVideo = Boolean(video)
+    const [showVideo, setShowVideo] = useState(true)
+
+    useEffect(() => {
+        if (!hasImage || !hasVideo) return
+        const id = window.setInterval(() => {
+            setShowVideo((prev) => !prev)
+        }, ABOUT_MEDIA_CROSSFADE_MS)
+        return () => window.clearInterval(id)
+    }, [hasImage, hasVideo])
+
+    const mediaClassName = "absolute inset-0 size-full object-cover object-center"
+
+    if (!hasImage && !hasVideo) {
+        return (
+            <img
+                src="/about-us.jpg"
+                alt={title}
+                className="size-full object-cover object-center"
+            />
+        )
+    }
+
+    if (hasImage && !hasVideo) {
+        return (
+            <img
+                src={image!}
+                alt={title}
+                className="size-full object-cover object-center"
+            />
+        )
+    }
+
+    if (hasVideo && !hasImage) {
+        return (
+            <video
+                src={video!}
+                autoPlay
+                muted
+                loop
+                playsInline
+                aria-label={title}
+                className="size-full object-cover object-center"
+                preload="auto"
+            />
+        )
+    }
+
+    return (
+        <div className="relative size-full">
+            <motion.img
+                src={image!}
+                alt={title}
+                animate={{ opacity: showVideo ? 0 : 1 }}
+                transition={{ duration: ABOUT_MEDIA_FADE_DURATION, ease: "easeInOut" }}
+                className={mediaClassName}
+            />
+            <motion.video
+                src={video!}
+                autoPlay
+                muted
+                loop
+                playsInline
+                aria-label={title}
+                animate={{ opacity: showVideo ? 1 : 0 }}
+                transition={{ duration: ABOUT_MEDIA_FADE_DURATION, ease: "easeInOut" }}
+                className={mediaClassName}
+                preload="auto"
+            />
+        </div>
+    )
+}
 
 const heroEase = [0.22, 1, 0.36, 1] as const
 
@@ -36,7 +122,8 @@ const heroTextItem = {
     },
 }
 
-function formatBranchHours(openFrom: string, openTo: string) {
+function formatBranchHours(openFrom?: string | null, openTo?: string | null) {
+    if (!openFrom || !openTo) return null
     return `يومياً ${openFrom} – ${openTo}`
 }
 
@@ -251,10 +338,11 @@ export default function LandingPage() {
                         typeMd="fade-left"
                         className="food-placeholder order-2 aspect-square overflow-hidden rounded-3xl border border-tant-gold/25 shadow-2xl sm:aspect-[4/3] md:order-2 md:aspect-[4/3] mx-auto w-full max-w-md md:max-w-none"
                     >
-                        <img
-                            src={about?.image ?? "/about-us.jpg"}
-                            alt={about?.title ?? "من نحن"}
-                            className="w-full h-full object-cover object-center"
+                        <AboutMedia
+                            key={`${about?.image ?? ""}|${about?.video ?? ""}`}
+                            image={about?.image}
+                            video={about?.video}
+                            title={about?.title ?? "من نحن"}
                         />
                     </ScrollAnimationWrapper>
 
@@ -351,11 +439,13 @@ export default function LandingPage() {
                                         key={product.id}
                                         type="fade-up"
                                         delay={index * 0.08}
+                                        className="h-full"
                                     >
                                         <MenuItemCard
                                             item={product}
                                             categoryId={categoryId}
                                             categoryName={categoryName}
+                                            className="h-full"
                                         />
                                     </ScrollAnimationWrapper>
                                 ))}
@@ -391,41 +481,54 @@ export default function LandingPage() {
                     className="scroll-mt-28 space-y-8 py-16"
                 >
                     <ScrollAnimationWrapper type="blur-fade" className="text-center">
-                        <h2 className="font-display text-3xl text-tant-gold md:text-4xl">
-                            {branchContent?.title ?? "الفروع"}
-                        </h2>
-                        <p className="mt-2 text-tant-muted">
-                            {branchContent?.description ??
-                                "زورونا في أنحاء المملكة."}
-                        </p>
+                        {branchContent?.title ? (
+                            <h2 className="font-display text-3xl text-tant-gold md:text-4xl">
+                                {branchContent.title}
+                            </h2>
+                        ) : null}
+                        {branchContent?.description ? (
+                            <p className="mt-2 text-tant-muted">
+                                {branchContent.description}
+                            </p>
+                        ) : null}
                     </ScrollAnimationWrapper>
 
                     <ul className="mx-auto grid max-w-4xl gap-6 md:grid-cols-3">
-                        {branches.map((branch, index) => (
-                            <li key={branch.id}>
-                                <ScrollAnimationWrapper
-                                    type="fade-up"
-                                    delay={index * 0.1}
-                                    className="text-center md:text-start"
-                                >
-                                    <div className="mb-3 inline-flex size-10 items-center justify-center rounded-full border border-tant-gold/40 text-tant-gold">
-                                        <MapPin className="size-5" />
-                                    </div>
-                                    <h3 className="font-display text-xl text-tant-gold">
-                                        {branch.name}
-                                    </h3>
-                                    <p className="mt-1 text-sm text-tant-cream/80">
-                                        {branch.address}
-                                    </p>
-                                    <p className="mt-1 text-sm text-tant-muted">
-                                        {formatBranchHours(
-                                            branch.open_from,
-                                            branch.open_to,
-                                        )}
-                                    </p>
-                                </ScrollAnimationWrapper>
-                            </li>
-                        ))}
+                        {branches.map((branch, index) => {
+                            const hours = formatBranchHours(
+                                branch.open_from,
+                                branch.open_to,
+                            )
+
+                            return (
+                                <li key={branch.id}>
+                                    <ScrollAnimationWrapper
+                                        type="fade-up"
+                                        delay={index * 0.1}
+                                        className="text-center md:text-start"
+                                    >
+                                        <div className="mb-3 inline-flex size-10 items-center justify-center rounded-full border border-tant-gold/40 text-tant-gold">
+                                            <MapPin className="size-5" />
+                                        </div>
+                                        {branch.name ? (
+                                            <h3 className="font-display text-xl text-tant-gold">
+                                                {branch.name}
+                                            </h3>
+                                        ) : null}
+                                        {branch.address ? (
+                                            <p className="mt-1 text-sm text-tant-cream/80">
+                                                {branch.address}
+                                            </p>
+                                        ) : null}
+                                        {hours ? (
+                                            <p className="mt-1 text-sm text-tant-muted">
+                                                {hours}
+                                            </p>
+                                        ) : null}
+                                    </ScrollAnimationWrapper>
+                                </li>
+                            )
+                        })}
                     </ul>
 
                     <ScrollAnimationWrapper
