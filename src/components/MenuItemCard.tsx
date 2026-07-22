@@ -216,12 +216,12 @@ export function MenuItemCard({
                   className="relative overflow-hidden rounded-xl border border-tant-gold/20 bg-linear-to-br from-tant-green-deep/55 to-tant-green/25 shadow-inner shadow-black/10 transition-[border-color,transform] duration-200 hover:border-tant-gold/45"
                 >
                   <div className="flex min-h-10 items-stretch">
-                    <div className="flex flex-1 items-center justify-center px-2 py-2">
+                    <div className="flex flex-1 items-center justify-center px-1 py-2">
                       <span className="font-display text-xs leading-none text-tant-gold-bright">
                         {option.weight}
                       </span>
                     </div>
-                    <div className="flex flex-1 items-center justify-center border-s border-tant-gold/15 bg-tant-green-deep/25 px-2 py-2">
+                    <div className="flex flex-1 items-center justify-center border-s border-tant-gold/15 bg-tant-green-deep/25 px-1 py-2">
                       <span className="text-sm font-semibold leading-none text-tant-cream">
                         {option.price} ر.س
                       </span>

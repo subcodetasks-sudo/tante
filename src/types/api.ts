@@ -90,6 +90,7 @@ export type About = {
   description: string
   content: string
   image: string | null
+  video: string | null
 }
 
 export type GalleryMediaType = "image" | "video"

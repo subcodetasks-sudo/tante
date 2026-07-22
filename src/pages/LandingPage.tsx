@@ -200,8 +200,7 @@ export default function LandingPage() {
     return (
         <>
             <title>
-                {settings?.restaurant_name ?? "طنط"}
-                {hero?.title ? ` — ${hero.title}` : " — طعم الأصالة"}
+                {`${settings?.restaurant_name ?? "طنط"}${hero?.title ? ` — ${hero.title}` : " — طعم الأصالة"}`}
             </title>
             {/* Hero — expands to full-bleed as it scrolls with the page */}
             <section
